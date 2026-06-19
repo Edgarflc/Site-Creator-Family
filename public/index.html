@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Creator Family</title>
+    <meta name="description" content="Rejoins la Creator Family et personnalise ton expérience." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Symbols+Rounded"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <!-- Fond animé -->
+    <div class="bg-orbs" aria-hidden="true">
+      <span class="orb orb-1"></span>
+      <span class="orb orb-2"></span>
+      <span class="orb orb-3"></span>
+    </div>
+
+    <main class="app" id="app">
+      <!-- ÉCRAN DE CONNEXION -->
+      <section class="screen" id="screen-login" hidden>
+        <div class="card card-intro">
+          <div class="badge">✦ Creator Family</div>
+          <h1 class="title">Bienvenue dans la <span class="accent">Creator&nbsp;Family</span></h1>
+          <p class="subtitle">
+            Réponds à quelques questions pour personnaliser ton profil. Tes rôles Discord
+            seront attribués automatiquement.
+          </p>
+          <button class="btn btn-discord" id="btn-login">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M20.317 4.369A19.79 19.79 0 0 0 15.885 3c-.21.375-.45.88-.617 1.28a18.27 18.27 0 0 0-5.535 0A12.6 12.6 0 0 0 9.11 3 19.74 19.74 0 0 0 4.677 4.37C1.99 8.34 1.26 12.21 1.62 16.02a19.9 19.9 0 0 0 6.073 3.058c.49-.67.927-1.382 1.302-2.13-.714-.27-1.4-.604-2.045-.99.171-.126.34-.257.5-.39 3.927 1.83 8.18 1.83 12.06 0 .163.137.332.268.5.39-.646.388-1.334.722-2.05.992.375.747.81 1.46 1.3 2.13a19.84 19.84 0 0 0 6.077-3.058c.42-4.43-.717-8.26-3.01-11.65ZM8.02 13.68c-1.18 0-2.155-1.085-2.155-2.42 0-1.334.955-2.42 2.155-2.42 1.21 0 2.176 1.095 2.155 2.42 0 1.335-.955 2.42-2.155 2.42Zm7.96 0c-1.18 0-2.155-1.085-2.155-2.42 0-1.334.955-2.42 2.155-2.42 1.21 0 2.176 1.095 2.155 2.42 0 1.335-.945 2.42-2.155 2.42Z"
+              />
+            </svg>
+            Se connecter avec Discord
+          </button>
+          <p class="login-hint" id="login-hint"></p>
+        </div>
+      </section>
+
+      <!-- ÉCRAN QUESTIONNAIRE -->
+      <section class="screen" id="screen-quiz" hidden>
+        <header class="quiz-header">
+          <div class="user-chip" id="user-chip"></div>
+          <div class="progress">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <span class="progress-label" id="progress-label"></span>
+        </header>
+        <div class="question-stage" id="question-stage">
+          <!-- Les questions sont injectées ici par app.js -->
+        </div>
+      </section>
+
+      <!-- ÉCRAN FINAL -->
+      <section class="screen" id="screen-done" hidden>
+        <div class="card card-done">
+          <div class="check-circle">✓</div>
+          <h2 class="title">C'est tout bon&nbsp;!</h2>
+          <p class="subtitle">
+            Merci d'avoir répondu. Tes rôles ont été attribués sur le serveur Discord.
+            Bienvenue dans la famille&nbsp;! 🎉
+          </p>
+          <button class="btn btn-ghost" id="btn-restart">Revoir mes réponses</button>
+        </div>
+      </section>
+
+      <!-- ÉCRAN DE CHARGEMENT -->
+      <section class="screen" id="screen-loading">
+        <div class="spinner"></div>
+      </section>
+    </main>
+
+    <!-- Toast pour les erreurs -->
+    <div class="toast" id="toast" role="alert" hidden></div>
+
+    <script src="/js/app.js"></script>
+  </body>
+</html>
