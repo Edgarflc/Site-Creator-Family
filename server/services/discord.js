@@ -50,10 +50,14 @@ async function fetchCurrentUser(accessToken) {
  * Nécessite que le bot ait la permission "Gérer les rôles" et que son rôle
  * soit positionné AU-DESSUS des rôles à attribuer dans la hiérarchie.
  *
+ * Gère automatiquement le rate limit (429) : si Discord renvoie un délai
+ * `retry_after`, on attend ce délai puis on réessaie (jusqu'à 5 tentatives).
+ *
  * @param {string} userId - ID Discord du membre
  * @param {string} roleId - ID du rôle à attribuer
+ * @param {number} attempt - compteur interne de tentatives (rate limit)
  */
-async function addRoleToMember(userId, roleId) {
+async function addRoleToMember(userId, roleId, attempt = 0) {
   const url = `${DISCORD_API}/guilds/${config.discord.guildId}/members/${userId}/roles/${roleId}`;
   const res = await fetch(url, {
     method: 'PUT',
@@ -65,6 +69,14 @@ async function addRoleToMember(userId, roleId) {
 
   // 204 = succès (rôle ajouté ou déjà présent)
   if (res.status === 204) return true;
+
+  // 429 = rate limit : on attend le délai demandé par Discord puis on réessaie.
+  if (res.status === 429 && attempt < 5) {
+    const data = await res.json().catch(() => ({}));
+    const waitMs = Math.ceil((data.retry_after ?? 1) * 1000) + 100;
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+    return addRoleToMember(userId, roleId, attempt + 1);
+  }
 
   const text = await res.text();
 

@@ -91,6 +91,9 @@ router.post('/answer', requireAuth, async (req, res) => {
   try {
     for (const roleId of roleIds) {
       await addRoleToMember(req.session.user.id, roleId);
+      // Petite pause entre chaque rôle pour éviter de déclencher le rate limit
+      // Discord lorsqu'une réponse attribue plusieurs rôles d'un coup.
+      await new Promise((resolve) => setTimeout(resolve, 250));
     }
     res.json({ ok: true, assignedRoles: roleIds, next });
   } catch (err) {
