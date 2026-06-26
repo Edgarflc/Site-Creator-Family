@@ -1,5 +1,5 @@
 const express = require('express');
-const { startId, finalId, questions } = require('../data/questions');
+const { startId, finalId, completionRoleIds, questions } = require('../data/questions');
 const { addRoleToMember } = require('../services/discord');
 
 const router = express.Router();
@@ -79,6 +79,14 @@ router.post('/answer', requireAuth, async (req, res) => {
   const roleIds = [
     ...new Set(selected.flatMap((a) => a.roleIds || [])),
   ];
+
+  // Si l'utilisateur valide la question finale, le questionnaire est terminé :
+  // on lui attribue aussi le(s) rôle(s) de complétion.
+  if (questionId === finalId) {
+    for (const roleId of completionRoleIds) {
+      if (!roleIds.includes(roleId)) roleIds.push(roleId);
+    }
+  }
 
   try {
     for (const roleId of roleIds) {

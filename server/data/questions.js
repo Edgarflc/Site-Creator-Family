@@ -37,6 +37,11 @@ const startId = 'arrivee';
 // Question TOUJOURS posée en dernier, quel que soit le parcours emprunté.
 const finalId = 'notifications';
 
+// Rôle(s) attribué(s) à TOUT visiteur qui termine le questionnaire,
+// c'est-à-dire dès qu'il valide la question finale (`finalId`),
+// quel que soit le parcours emprunté.
+const completionRoleIds = ['1514304635324858438'];
+
 const questions = {
   // ---------- QUESTION CENTRALE ----------
   arrivee: {
@@ -227,4 +232,4 @@ const questions = {
   },
 };
 
-module.exports = { startId, finalId, questions };
+module.exports = { startId, finalId, completionRoleIds, questions };
