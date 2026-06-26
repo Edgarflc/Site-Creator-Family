@@ -91,9 +91,10 @@ router.post('/answer', requireAuth, async (req, res) => {
   try {
     for (const roleId of roleIds) {
       await addRoleToMember(req.session.user.id, roleId);
-      // Petite pause entre chaque rôle pour éviter de déclencher le rate limit
-      // Discord lorsqu'une réponse attribue plusieurs rôles d'un coup.
-      await new Promise((resolve) => setTimeout(resolve, 250));
+      // Petite pause entre chaque rôle pour limiter le risque de rate limit
+      // Discord. Le 429 est de toute façon géré automatiquement (retry) côté
+      // service, donc on peut rester court.
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
     res.json({ ok: true, assignedRoles: roleIds, next });
   } catch (err) {
