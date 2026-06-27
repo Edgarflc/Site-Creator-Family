@@ -30,6 +30,10 @@ const config = {
     clientSecret: process.env.DISCORD_CLIENT_SECRET,
     botToken: process.env.DISCORD_BOT_TOKEN,
     guildId: process.env.DISCORD_GUILD_ID,
+    // Clé publique de l'application (onglet "General Information" du portail).
+    // Sert à vérifier la signature des interactions (slash commands) envoyées
+    // par Discord sur l'endpoint HTTP /interactions.
+    publicKey: process.env.DISCORD_PUBLIC_KEY,
   },
 };
 

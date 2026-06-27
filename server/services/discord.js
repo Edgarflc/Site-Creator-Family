@@ -93,4 +93,49 @@ async function addRoleToMember(userId, roleId, attempt = 0) {
   throw new Error(`Échec de l'attribution du rôle (${res.status}): ${text}`);
 }
 
-module.exports = { exchangeCode, fetchCurrentUser, addRoleToMember };
+module.exports = { exchangeCode, fetchCurrentUser, addRoleToMember, fetchAllMembers };
+
+/**
+ * Récupère TOUS les membres du serveur, page par page (pagination `after`).
+ * Nécessite l'intent privilégié "SERVER MEMBERS INTENT" activé pour le bot.
+ * Gère le rate limit (429) en respectant le délai renvoyé par Discord.
+ * @returns {Promise<Array>} liste des objets membre Discord (avec `.user`)
+ */
+async function fetchAllMembers() {
+  const members = [];
+  let after = '0';
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const url =
+      `${DISCORD_API}/guilds/${config.discord.guildId}/members` +
+      `?limit=1000&after=${after}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bot ${config.discord.botToken}` },
+    });
+
+    if (res.status === 429) {
+      const data = await res.json().catch(() => ({}));
+      const waitMs = Math.ceil((data.retry_after ?? 1) * 1000) + 100;
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+      continue;
+    }
+    if (!res.ok) {
+      const text = await res.text();
+      if (res.status === 403) {
+        throw new Error(
+          "Accès refusé à la liste des membres (403). Active l'intent " +
+            '"SERVER MEMBERS INTENT" pour le bot dans le Developer Portal.'
+        );
+      }
+      throw new Error(`Impossible de récupérer les membres (${res.status}): ${text}`);
+    }
+
+    const page = await res.json();
+    members.push(...page);
+    if (page.length < 1000) break;
+    after = page[page.length - 1].user.id;
+  }
+
+  return members;
+}
