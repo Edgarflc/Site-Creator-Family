@@ -30,6 +30,8 @@ const state = {
   finalId: null, // question toujours posée en dernier
   currentId: null,
   answered: 0, // nombre de questions déjà répondues
+  queue: [], // ids des questions de branchement en attente (parcours multiples)
+  finalDone: false, // la question finale a-t-elle déjà été posée ?
 };
 
 /** Affiche un seul écran à la fois. */
@@ -133,7 +135,7 @@ function maxDepthFrom(id, visited = new Set()) {
 
 /** Met à jour la barre de progression (total estimé selon le parcours). */
 function updateProgress() {
-  const remaining = maxDepthFrom(state.currentId); // questions restantes (current incluse)
+  const remaining = maxDepthFrom(state.currentId) + state.queue.length; // questions restantes (current incluse + parcours en attente)
   const total = state.answered + remaining;
   const current = state.answered + 1;
   els.progressBar.style.width = `${(state.answered / total) * 100}%`;
@@ -194,18 +196,45 @@ function renderQuestion() {
 }
 
 /**
- * Détermine la question suivante après `question`.
- * Si aucun `next` n'est défini et que ce n'est pas déjà la question finale,
- * on bascule automatiquement sur la question finale (toujours posée en dernier).
+ * Détermine la (les) question(s) suivante(s) après `question`.
+ *
+ * `nextIds` est la liste des ids de suivi issus de la / des réponse(s)
+ * sélectionnée(s) (une seule en choix unique, potentiellement plusieurs en
+ * choix multiple). Tous les parcours de suivi sont empilés dans `state.queue`
+ * puis visités l'un après l'autre. La question finale (`finalId`) est toujours
+ * posée en dernier, une seule fois, quand plus aucun parcours n'est en attente.
  */
-function goToNext(question, explicitNext) {
+function advance(question, nextIds) {
   state.answered += 1;
-  let target = explicitNext || null;
-  if (!target && question.id !== state.finalId && state.finalId && state.questions[state.finalId]) {
+
+  // Empile les nouveaux parcours de suivi (sans doublon, hors question finale).
+  for (const id of nextIds) {
+    if (
+      id &&
+      state.questions[id] &&
+      id !== state.finalId &&
+      id !== state.currentId &&
+      !state.queue.includes(id)
+    ) {
+      state.queue.push(id);
+    }
+  }
+
+  // Prochaine question : d'abord la file, sinon la question finale (une fois).
+  let target = state.queue.shift() || null;
+  if (
+    !target &&
+    question.id !== state.finalId &&
+    !state.finalDone &&
+    state.finalId &&
+    state.questions[state.finalId]
+  ) {
     target = state.finalId;
   }
+
   if (target && state.questions[target]) {
     state.currentId = target;
+    if (target === state.finalId) state.finalDone = true;
     renderQuestion();
   } else {
     finish();
@@ -226,7 +255,8 @@ async function handleAnswer(question, answer, btn, answersEl) {
     block.classList.remove('enter');
     block.classList.add('leave');
     setTimeout(() => {
-      goToNext(question, result.next || answer.next || null);
+      const nextId = result.next || answer.next || null;
+      advance(question, nextId ? [nextId] : []);
     }, 350);
   } catch (err) {
     showToast(err.message);
@@ -252,7 +282,14 @@ async function handleMultiAnswer(question, confirmBtn, answersEl) {
     block.classList.remove('enter');
     block.classList.add('leave');
     setTimeout(() => {
-      goToNext(question, result.next || question.next || null);
+      // Une question multi peut mener à PLUSIEURS parcours de suivi :
+      // on collecte le `next` de chaque réponse cochée (+ un éventuel
+      // `next` défini au niveau de la question).
+      const selectedAnswers = question.answers.filter((a) => values.includes(a.value));
+      const nextIds = selectedAnswers.map((a) => a.next).filter(Boolean);
+      const fallback = result.next || question.next || null;
+      if (fallback) nextIds.push(fallback);
+      advance(question, nextIds);
     }, 350);
   } catch (err) {
     showToast(err.message);
@@ -271,6 +308,8 @@ function finish() {
 /** Démarre / redémarre le questionnaire. */
 function startQuiz() {
   state.answered = 0;
+  state.queue = [];
+  state.finalDone = false;
   state.currentId = state.startId;
   renderUserChip();
   showScreen('quiz');

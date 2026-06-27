@@ -47,7 +47,8 @@ const questions = {
   arrivee: {
     id: 'arrivee',
     question: "Bienvenue sur Creator Family ! Qu'est-ce qui t'amène parmi nous ?",
-    description: '',
+    description: 'Tu peux sélectionner plusieurs réponses.',
+    multi: true,
     answers: [
       {
         value: 'createur',
@@ -184,7 +185,8 @@ const questions = {
   staff_apprendre: {
     id: 'staff_apprendre',
     question: "Qu'aimerais-tu apprendre en priorité sur ce serveur ?",
-    description: "D'autres pôles ouvriront dans les prochaines semaines.",
+    description: "D'autres pôles ouvriront dans les prochaines semaines. Tu peux en sélectionner plusieurs.",
+    multi: true,
     answers: [
       {
         value: 'ecriture_scenario',
