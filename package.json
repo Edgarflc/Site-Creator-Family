@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node --watch server/index.js"
+    "dev": "node --watch server/index.js",
+    "add-role": "node scripts/add-role-to-all.js"
   },
   "engines": {
     "node": ">=18.0.0"
