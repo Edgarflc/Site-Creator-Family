@@ -149,13 +149,20 @@ function renderQuestion() {
 
   updateProgress();
 
+  // Une question multi qui possède des icônes/emojis garde l'esthétique
+  // "cartes" du choix unique (.cards) ; sinon elle adopte le style liste
+  // avec cases à cocher (ex : notifications).
+  const multiCards = q.multi && q.answers.some((a) => a.icon || a.emoji);
+  const answersClass =
+    'answers' + (q.multi ? ' multi' : '') + (multiCards ? ' cards' : '');
+
   const block = document.createElement('div');
   block.className = 'question-block enter';
   block.innerHTML = `
     <div class="q-step">Question ${state.answered + 1}</div>
     <h2 class="q-text">${escapeHtml(q.question)}</h2>
     ${q.description ? `<p class="q-desc">${escapeHtml(q.description)}</p>` : ''}
-    <div class="answers${q.multi ? ' multi' : ''}"></div>
+    <div class="${answersClass}"></div>
   `;
 
   const answersEl = block.querySelector('.answers');
