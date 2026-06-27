@@ -5,7 +5,6 @@ const { config, validateConfig } = require('./config');
 
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
-const interactionsRoutes = require('./routes/interactions');
 
 validateConfig();
 
@@ -15,16 +14,7 @@ const app = express();
 // "secure" fonctionnent correctement en HTTPS.
 app.set('trust proxy', 1);
 
-// On conserve le corps brut de la requête (req.rawBody) : il est indispensable
-// pour vérifier la signature Ed25519 des interactions Discord (/interactions),
-// qui porte sur les octets exacts reçus.
-app.use(
-  express.json({
-    verify: (req, _res, buf) => {
-      req.rawBody = buf;
-    },
-  })
-);
+app.use(express.json());
 
 app.use(
   session({
@@ -45,8 +35,6 @@ app.use(
 // Routes API / auth
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
-// Endpoint des interactions Discord (slash commands)
-app.use('/interactions', interactionsRoutes);
 
 // Fichiers statiques du frontend
 app.use(express.static(path.join(__dirname, '..', 'public')));
