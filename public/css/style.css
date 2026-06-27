@@ -30,7 +30,12 @@ body {
   font-family: 'Onest', system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
-  overflow: hidden;
+  /* Autorise le scroll vertical (sinon le bas des longues questions
+     est inaccessible sur mobile), tout en bloquant le scroll horizontal
+     provoqué par les animations translateX des questions. */
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   position: relative;
   -webkit-font-smoothing: antialiased;
 }
@@ -91,7 +96,9 @@ body {
   z-index: 1;
   min-height: 100vh;
   display: grid;
-  place-items: center;
+  /* "safe" : centre le contenu quand il tient dans l'écran, mais bascule
+     en alignement haut quand il déborde, pour ne pas couper le contenu. */
+  place-items: safe center;
   padding: 24px;
 }
 .screen {
@@ -99,6 +106,12 @@ body {
   max-width: 720px;
   display: flex;
   justify-content: center;
+}
+/* Réserve la hauteur de l'en-tête fixe pour que le haut d'une longue
+   question ne soit pas masqué par celui-ci une fois remonté tout en haut. */
+#screen-quiz {
+  padding-top: 72px;
+  padding-bottom: 24px;
 }
 .screen[hidden] {
   display: none;
