@@ -400,6 +400,40 @@ body {
 .answer:disabled {
   cursor: default;
 }
+
+/* ---------- Réponse verrouillée (rôle attribué manuellement) ---------- */
+.answer.locked {
+  cursor: not-allowed;
+  opacity: 0.85;
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.03);
+}
+/* Neutralise l'effet de survol pour bien signaler le caractère non cliquable */
+.answer.locked:hover {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.03);
+}
+.answer.locked .answer-icon {
+  color: var(--text-dim);
+}
+.answer.locked .lock-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 18px;
+  color: var(--text-dim);
+}
+.answer-locked-note {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--accent);
+}
+
 .answer.loading::after {
   content: '';
   position: absolute;

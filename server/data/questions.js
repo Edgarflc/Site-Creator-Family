@@ -24,12 +24,17 @@
  * il n'est jamais envoyé au navigateur (voir routes/api.js).
  *
  * Champs d'une réponse :
- *   value   (string)  identifiant unique de la réponse dans sa question
- *   label   (string)  texte affiché
- *   emoji   (string)  optionnel, icône affichée
- *   note    (string)  optionnel, petit texte d'avertissement sous le label
- *   roleIds (array)   ids des rôles à attribuer (peut être vide)
- *   next    (string)  id de la question suivante, ou null pour terminer
+ *   value      (string)  identifiant unique de la réponse dans sa question
+ *   label      (string)  texte affiché
+ *   emoji      (string)  optionnel, icône affichée
+ *   note       (string)  optionnel, petit texte d'avertissement sous le label
+ *   roleIds    (array)   ids des rôles à attribuer (peut être vide)
+ *   next       (string)  id de la question suivante, ou null pour terminer
+ *   locked     (bool)    optionnel : la réponse est affichée mais NON cliquable.
+ *                        Le serveur n'attribue JAMAIS ses `roleIds` (sécurité).
+ *                        Sert aux rôles prestigieux attribués manuellement.
+ *   lockedNote (string)  optionnel : message expliquant comment obtenir ce rôle,
+ *                        affiché sous la réponse verrouillée.
  */
 
 const startId = 'arrivee';
@@ -132,6 +137,9 @@ const questions = {
         icon: 'military_tech',
         note: 'Professionnel',
         roleIds: ['1514279715924344833'],
+        locked: true,
+        lockedNote:
+          'Rôle prestigieux : pour l\'obtenir, ouvre un ticket sur Discord et fais-toi vérifier par les admins.',
         next: null,
       },
     ],
@@ -177,6 +185,9 @@ const questions = {
         icon: 'military_tech',
         note: 'Professionnel',
         roleIds: ['1514279715924344833'],
+        locked: true,
+        lockedNote:
+          'Rôle prestigieux : pour l\'obtenir, ouvre un ticket sur Discord et fais-toi vérifier par les admins.',
         next: 'staff_apprendre',
       },
     ],

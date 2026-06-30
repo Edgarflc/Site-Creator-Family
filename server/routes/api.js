@@ -35,6 +35,8 @@ router.get('/questions', (req, res) => {
         icon: a.icon || null,
         emoji: a.emoji || null,
         note: a.note || null,
+        locked: a.locked || false,
+        lockedNote: a.lockedNote || null,
         next: a.next || null,
       })),
     };
@@ -63,13 +65,20 @@ router.post('/answer', requireAuth, async (req, res) => {
   if (Array.isArray(values)) {
     // Choix multiple : on garde toutes les réponses sélectionnées valides.
     // Une sélection vide est autorisée (l'utilisateur ne veut aucune notif).
-    selected = question.answers.filter((a) => values.includes(a.value));
+    // Les réponses verrouillées (`locked`) sont ignorées : leur rôle n'est
+    // jamais attribué automatiquement (attribution manuelle par les admins).
+    selected = question.answers.filter((a) => values.includes(a.value) && !a.locked);
     next = question.next || null;
   } else {
     // Choix unique
     const answer = question.answers.find((a) => a.value === value);
     if (!answer) {
       return res.status(400).json({ error: 'Réponse invalide.' });
+    }
+    // Sécurité : une réponse verrouillée ne peut pas être validée. Le rôle
+    // associé (ex. "Pro") est attribué manuellement après vérification admin.
+    if (answer.locked) {
+      return res.status(403).json({ error: 'Cette réponse n\'est pas disponible. Ouvre un ticket sur Discord pour être vérifié.' });
     }
     selected = [answer];
     next = answer.next || null;

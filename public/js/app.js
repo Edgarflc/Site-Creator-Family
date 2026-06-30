@@ -174,6 +174,25 @@ function renderQuestion() {
       : a.emoji
         ? `<span class="emoji">${a.emoji}</span>`
         : '';
+
+    // Réponse verrouillée : affichée mais non cliquable. On indique sous le
+    // libellé comment obtenir le rôle (ticket Discord + vérification admin).
+    if (a.locked) {
+      btn.classList.add('locked');
+      btn.type = 'button';
+      btn.disabled = true;
+      btn.setAttribute('aria-disabled', 'true');
+      btn.innerHTML = `
+        <span class="lock-badge material-symbols-rounded">lock</span>
+        ${iconHtml}
+        <span class="answer-label">${escapeHtml(a.label)}</span>
+        ${a.note ? `<span class="answer-note">${escapeHtml(a.note)}</span>` : ''}
+        ${a.lockedNote ? `<span class="answer-locked-note">${escapeHtml(a.lockedNote)}</span>` : ''}
+      `;
+      answersEl.appendChild(btn);
+      return;
+    }
+
     btn.innerHTML = `
       ${iconHtml}
       <span class="answer-label">${escapeHtml(a.label)}</span>
