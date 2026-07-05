@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin — Creator Family</title>
+    <meta name="robots" content="noindex" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Symbols+Rounded"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="bg-orbs" aria-hidden="true">
+      <span class="orb orb-1"></span>
+      <span class="orb orb-2"></span>
+      <span class="orb orb-3"></span>
+    </div>
+
+    <main class="app admin-app" id="app">
+      <!-- CHARGEMENT -->
+      <section class="screen" id="screen-loading">
+        <div class="spinner"></div>
+      </section>
+
+      <!-- ACCÈS REFUSÉ -->
+      <section class="screen" id="screen-denied" hidden>
+        <div class="card card-intro">
+          <div class="badge">Accès restreint</div>
+          <h1 class="title">Espace <span class="accent">réservé</span> aux admins</h1>
+          <p class="subtitle">Tu n'as pas les autorisations pour accéder à cette page.</p>
+          <a class="btn btn-discord" href="/">Retour au site</a>
+        </div>
+      </section>
+
+      <!-- ADMIN -->
+      <section class="admin" id="screen-admin" hidden>
+        <header class="admin-topbar">
+          <div class="admin-brand">
+            <span class="material-symbols-rounded">shield_person</span>
+            Creator Family <span class="admin-brand-tag">Admin</span>
+          </div>
+          <div class="admin-topbar-actions">
+            <a class="admin-ghost" href="/">
+              <span class="material-symbols-rounded">open_in_new</span> Voir le site
+            </a>
+            <button class="admin-ghost" id="btn-logout" type="button">
+              <span class="material-symbols-rounded">logout</span> Déconnexion
+            </button>
+          </div>
+        </header>
+
+        <nav class="admin-tabs" id="admin-tabs">
+          <button class="admin-tab active" data-tab="events" type="button">
+            <span class="material-symbols-rounded">calendar_month</span> Conférences
+          </button>
+          <button class="admin-tab" data-tab="questions" type="button">
+            <span class="material-symbols-rounded">quiz</span> Questionnaire
+          </button>
+          <button class="admin-tab" data-tab="proposals" type="button">
+            <span class="material-symbols-rounded">lightbulb</span> Propositions
+            <span class="tab-badge" id="proposals-badge" hidden>0</span>
+          </button>
+          <button class="admin-tab" data-tab="stats" type="button">
+            <span class="material-symbols-rounded">bar_chart</span> Statistiques
+          </button>
+        </nav>
+
+        <!-- ONGLET CONFÉRENCES -->
+        <div class="admin-panel" id="tab-events">
+          <div class="admin-panel-head">
+            <div>
+              <h2 class="admin-h2">Conférences</h2>
+              <p class="admin-sub">Ajoute, modifie ou supprime les conférences du calendrier.</p>
+            </div>
+            <button class="btn-primary" id="event-new" type="button">
+              <span class="material-symbols-rounded">add</span> Nouvelle conférence
+            </button>
+          </div>
+          <div class="admin-list" id="events-admin-list"></div>
+        </div>
+
+        <!-- ONGLET QUESTIONNAIRE -->
+        <div class="admin-panel" id="tab-questions" hidden>
+          <div class="admin-panel-head">
+            <div>
+              <h2 class="admin-h2">Questionnaire</h2>
+              <p class="admin-sub">
+                Édite le graphe de questions. Le <code>next</code> d'une réponse pointe vers
+                l'id d'une autre question (vide = fin de parcours).
+              </p>
+            </div>
+            <button class="btn-primary" id="questions-save" type="button">
+              <span class="material-symbols-rounded">save</span> Enregistrer
+            </button>
+          </div>
+
+          <div class="admin-card cfg-card">
+            <div class="field">
+              <label>Question de départ (startId)</label>
+              <input id="cfg-start" type="text" list="qids" />
+            </div>
+            <div class="field">
+              <label>Question finale (finalId)</label>
+              <input id="cfg-final" type="text" list="qids" />
+            </div>
+            <div class="field">
+              <label>Rôles de complétion (roleIds, séparés par des virgules)</label>
+              <input id="cfg-completion" type="text" />
+            </div>
+          </div>
+          <datalist id="qids"></datalist>
+
+          <div id="questions-list"></div>
+          <button class="btn-ghost-admin" id="question-add" type="button">
+            <span class="material-symbols-rounded">add</span> Ajouter une question
+          </button>
+        </div>
+
+        <!-- ONGLET PROPOSITIONS -->
+        <div class="admin-panel" id="tab-proposals" hidden>
+          <div class="admin-panel-head">
+            <div>
+              <h2 class="admin-h2">Propositions de conférences</h2>
+              <p class="admin-sub">Les idées de conférences soumises par les membres.</p>
+            </div>
+            <button class="admin-ghost" id="proposals-refresh" type="button">
+              <span class="material-symbols-rounded">refresh</span> Rafraîchir
+            </button>
+          </div>
+          <div class="admin-list" id="proposals-list"></div>
+        </div>
+
+        <!-- ONGLET STATISTIQUES -->
+        <div class="admin-panel" id="tab-stats" hidden>
+          <div class="admin-panel-head">
+            <div>
+              <h2 class="admin-h2">Statistiques</h2>
+              <p class="admin-sub">Vue d'ensemble des réponses au questionnaire.</p>
+            </div>
+            <button class="admin-ghost" id="stats-refresh" type="button">
+              <span class="material-symbols-rounded">refresh</span> Rafraîchir
+            </button>
+          </div>
+          <div class="stat-tiles" id="stat-tiles"></div>
+          <div id="stats-questions"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modale conférence -->
+    <div class="modal-overlay center" id="event-modal" hidden>
+      <div class="modal-box" role="dialog" aria-modal="true">
+        <button class="settings-close" id="event-modal-close" type="button" aria-label="Fermer">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+        <h3 class="modal-title" id="event-modal-title">Nouvelle conférence</h3>
+        <form id="event-form">
+          <input type="hidden" id="event-id" />
+          <div class="field">
+            <label>Titre *</label>
+            <input id="event-title" type="text" required />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Date *</label>
+              <div class="datepick" data-datepick data-placeholder="Choisir une date">
+                <input type="hidden" id="event-date" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Heure *</label>
+              <select id="event-time" class="js-select" data-time>
+                <option value="" disabled selected>Heure</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Intervenant / hôte</label>
+            <input id="event-host" type="text" />
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <textarea id="event-desc" rows="3"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-ghost-admin" id="event-cancel">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modale de confirmation (remplace le confirm() du navigateur) -->
+    <div class="modal-overlay center" id="confirm-modal" hidden>
+      <div class="modal-box modal-sm" role="dialog" aria-modal="true">
+        <div class="confirm-icon" id="confirm-icon">
+          <span class="material-symbols-rounded">help</span>
+        </div>
+        <h3 class="modal-title" id="confirm-title">Confirmation</h3>
+        <p class="confirm-text" id="confirm-text"></p>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost-admin" id="confirm-cancel">Annuler</button>
+          <button type="button" class="btn-danger" id="confirm-ok">Confirmer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="alert" hidden></div>
+
+    <script src="/js/pickers.js"></script>
+    <script src="/js/admin.js"></script>
+  </body>
+</html>

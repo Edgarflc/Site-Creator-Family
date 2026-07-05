@@ -93,4 +93,61 @@ async function addRoleToMember(userId, roleId, attempt = 0) {
   throw new Error(`Échec de l'attribution du rôle (${res.status}): ${text}`);
 }
 
-module.exports = { exchangeCode, fetchCurrentUser, addRoleToMember };
+/**
+ * Envoie un message privé (MP) à un utilisateur via le bot.
+ * Ouvre d'abord un salon DM avec le destinataire, puis y poste le message.
+ *
+ * Peut échouer si l'utilisateur a fermé ses MP ou ne partage aucun serveur
+ * avec le bot : dans ce cas Discord renvoie une erreur, propagée à l'appelant.
+ *
+ * @param {string} userId - ID Discord du destinataire
+ * @param {string} content - texte du message
+ * @param {number} attempt - compteur interne (rate limit)
+ */
+async function sendDirectMessage(userId, content, attempt = 0) {
+  // 1) Ouvre (ou récupère) le salon DM avec l'utilisateur.
+  const dmRes = await fetch(`${DISCORD_API}/users/@me/channels`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bot ${config.discord.botToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ recipient_id: userId }),
+  });
+
+  if (dmRes.status === 429 && attempt < 5) {
+    const data = await dmRes.json().catch(() => ({}));
+    const waitMs = Math.ceil((data.retry_after ?? 1) * 1000) + 100;
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+    return sendDirectMessage(userId, content, attempt + 1);
+  }
+  if (!dmRes.ok) {
+    const text = await dmRes.text();
+    throw new Error(`Impossible d'ouvrir le MP (${dmRes.status}): ${text}`);
+  }
+  const channel = await dmRes.json();
+
+  // 2) Poste le message dans ce salon DM.
+  const msgRes = await fetch(`${DISCORD_API}/channels/${channel.id}/messages`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bot ${config.discord.botToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ content }),
+  });
+
+  if (msgRes.status === 429 && attempt < 5) {
+    const data = await msgRes.json().catch(() => ({}));
+    const waitMs = Math.ceil((data.retry_after ?? 1) * 1000) + 100;
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+    return sendDirectMessage(userId, content, attempt + 1);
+  }
+  if (!msgRes.ok) {
+    const text = await msgRes.text();
+    throw new Error(`Échec de l'envoi du MP (${msgRes.status}): ${text}`);
+  }
+  return true;
+}
+
+module.exports = { exchangeCode, fetchCurrentUser, addRoleToMember, sendDirectMessage };

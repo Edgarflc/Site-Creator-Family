@@ -1,7 +1,8 @@
 const express = require('express');
 const crypto = require('crypto');
-const { config } = require('../config');
+const { config, isAdmin } = require('../config');
 const { exchangeCode, fetchCurrentUser } = require('../services/discord');
+const { hasCompleted } = require('../services/store');
 
 const router = express.Router();
 
@@ -55,7 +56,11 @@ router.get('/callback', async (req, res) => {
         : null,
     };
 
-    res.redirect('/');
+    // Revient sur la page d'origine (ex : /calendrier) si elle a été mémorisée,
+    // sinon retour à l'accueil.
+    const dest = req.session.returnTo || '/';
+    delete req.session.returnTo;
+    res.redirect(dest);
   } catch (err) {
     console.error('[auth/callback]', err.message);
     res.redirect('/?auth=error');
@@ -67,7 +72,23 @@ router.get('/callback', async (req, res) => {
  * Renvoie l'utilisateur connecté (ou null).
  */
 router.get('/me', (req, res) => {
-  res.json({ user: req.session.user || null });
+  // Bypass dev : on ouvre une session factice pour accéder au site en local
+  // sans passer par l'OAuth Discord.
+  if (config.devBypass && !req.session.user) {
+    req.session.user = {
+      id: 'dev-local-user',
+      username: 'Dev Local',
+      avatar: null,
+    };
+  }
+  const user = req.session.user || null;
+  // `completed` indique si l'utilisateur a déjà terminé le questionnaire au
+  // moins une fois : le front affiche alors l'accueil plutôt que le questionnaire.
+  res.json({
+    user,
+    completed: user ? hasCompleted(user.id) : false,
+    isAdmin: user ? isAdmin(user.id) : false,
+  });
 });
 
 /**

@@ -21,10 +21,31 @@ function resolveBaseUrl() {
   return 'http://localhost:3000';
 }
 
+// IDs Discord des administrateurs du site (gestion complète : conférences,
+// questionnaire, statistiques). Modifiable via la variable d'environnement
+// ADMIN_DISCORD_IDS (liste séparée par des virgules) sinon cette liste par défaut.
+const DEFAULT_ADMIN_IDS = [
+  '382919310596636684',
+  '522693531421245450',
+  '740967536799252542',
+  '239833787280785409',
+  '515884259576381441',
+];
+
+function resolveAdminIds() {
+  if (process.env.ADMIN_DISCORD_IDS) {
+    return process.env.ADMIN_DISCORD_IDS.split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return DEFAULT_ADMIN_IDS;
+}
+
 const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   baseUrl: resolveBaseUrl(),
   sessionSecret: process.env.SESSION_SECRET || 'dev_secret_change_me',
+  adminIds: resolveAdminIds(),
   discord: {
     clientId: process.env.DISCORD_CLIENT_ID,
     clientSecret: process.env.DISCORD_CLIENT_SECRET,
@@ -34,6 +55,16 @@ const config = {
 };
 
 config.discord.redirectUri = `${config.baseUrl}/auth/callback`;
+
+/**
+ * Bypass d'authentification pour le développement local.
+ * Actif si DEV_BYPASS_AUTH=true, OU automatiquement en local (localhost)
+ * quand les identifiants Discord ne sont pas configurés.
+ * En prod (HTTPS + credentials présents), il reste désactivé.
+ */
+config.devBypass =
+  process.env.DEV_BYPASS_AUTH === 'true' ||
+  (config.baseUrl.startsWith('http://localhost') && !config.discord.clientId);
 
 /**
  * Vérifie au démarrage que les variables essentielles sont présentes.
@@ -53,6 +84,24 @@ function validateConfig() {
         '\n   Copie .env.example en .env et renseigne les valeurs.\n'
     );
   }
+
+  if (config.devBypass) {
+    console.warn(
+      '🔓  DEV BYPASS ACTIF : authentification Discord contournée (utilisateur factice, ' +
+        'aucun rôle réellement attribué). Ne jamais activer en production.\n'
+    );
+  }
 }
 
-module.exports = { config, validateConfig };
+/**
+ * Un utilisateur est-il administrateur du site ?
+ * En dev bypass (local), l'utilisateur factice est considéré admin pour pouvoir
+ * tester l'espace d'administration sans configuration Discord.
+ */
+function isAdmin(userId) {
+  if (!userId) return false;
+  if (config.devBypass && userId === 'dev-local-user') return true;
+  return config.adminIds.includes(userId);
+}
+
+module.exports = { config, validateConfig, isAdmin };

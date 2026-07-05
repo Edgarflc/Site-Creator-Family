@@ -25,6 +25,11 @@
       <span class="orb orb-3"></span>
     </div>
 
+    <!-- Bouton profil (haut à droite), visible une fois connecté -->
+    <button class="profile-btn" id="profile-btn" type="button" aria-label="Mon profil" hidden>
+      <span class="profile-avatar" id="profile-avatar"></span>
+    </button>
+
     <main class="app" id="app">
       <!-- ÉCRAN DE CONNEXION -->
       <section class="screen" id="screen-login" hidden>
@@ -72,6 +77,12 @@
             Bienvenue dans la famille&nbsp;! 🎉
           </p>
           <button class="btn btn-ghost" id="btn-restart">Revoir mes réponses</button>
+          <p class="done-links">
+            <a class="link-calendar" href="/calendrier">
+              <span class="material-symbols-rounded">calendar_month</span>
+              Voir les prochaines conférences
+            </a>
+          </p>
         </div>
       </section>
 
@@ -81,9 +92,38 @@
       </section>
     </main>
 
+    <!-- Panneau de paramètres / profil -->
+    <div class="modal-overlay" id="settings-overlay" hidden>
+      <div class="settings-panel" role="dialog" aria-modal="true" aria-label="Mon profil">
+        <button class="settings-close" id="settings-close" type="button" aria-label="Fermer">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+        <div class="settings-user" id="settings-user"></div>
+        <div class="settings-actions">
+          <button class="settings-item" id="btn-redo" type="button">
+            <span class="material-symbols-rounded">restart_alt</span>
+            <span>Refaire le questionnaire</span>
+          </button>
+          <a class="settings-item" href="/calendrier">
+            <span class="material-symbols-rounded">calendar_month</span>
+            <span>Voir les conférences</span>
+          </a>
+          <a class="settings-item settings-item-admin" id="settings-admin" href="/admin" hidden>
+            <span class="material-symbols-rounded">shield_person</span>
+            <span>Espace admin</span>
+          </a>
+          <button class="settings-item settings-item-danger" id="btn-logout" type="button">
+            <span class="material-symbols-rounded">logout</span>
+            <span>Se déconnecter</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast pour les erreurs -->
     <div class="toast" id="toast" role="alert" hidden></div>
 
+    <script src="/js/profile.js"></script>
     <script src="/js/app.js"></script>
   </body>
 </html>

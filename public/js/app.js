@@ -25,6 +25,7 @@ const els = {
 
 const state = {
   user: null,
+  completed: false, // le questionnaire a-t-il déjà été terminé une fois ?
   questions: {}, // dictionnaire { id: question }
   startId: null,
   finalId: null, // question toujours posée en dernier
@@ -69,11 +70,11 @@ function readAuthError() {
   window.history.replaceState({}, '', '/');
 }
 
-/** Récupère l'utilisateur connecté. */
+/** Récupère l'utilisateur connecté + son état de complétion. */
 async function fetchMe() {
   const res = await fetch('/auth/me');
   const data = await res.json();
-  return data.user;
+  return data; // { user, completed }
 }
 
 /** Récupère le graphe des questions. */
@@ -106,7 +107,7 @@ function renderUserChip() {
   const avatar = state.user.avatar
     ? `<img src="${state.user.avatar}" alt="" />`
     : '';
-  els.userChip.innerHTML = `${avatar}<span>${state.user.username}</span>`;
+  els.userChip.innerHTML = `${avatar}<span>${escapeHtml(state.user.username)}</span>`;
 }
 
 /**
@@ -328,6 +329,7 @@ async function handleMultiAnswer(question, confirmBtn, answersEl) {
 /** Fin du questionnaire. */
 function finish() {
   els.progressBar.style.width = '100%';
+  state.completed = true; // désormais, l'accueil s'affichera à la place du quiz
   showScreen('done');
 }
 
@@ -341,6 +343,7 @@ function startQuiz() {
   showScreen('quiz');
   renderQuestion();
 }
+
 
 /** Échappe le HTML pour éviter toute injection. */
 function escapeHtml(str) {
@@ -359,8 +362,14 @@ async function init() {
   });
   els.btnRestart.addEventListener('click', startQuiz);
 
+  // `?redo=1` : l'utilisateur veut explicitement refaire le questionnaire
+  // (depuis le panneau profil), même s'il l'a déjà terminé.
+  const forceRedo = new URLSearchParams(window.location.search).get('redo') === '1';
+
   try {
-    state.user = await fetchMe();
+    const me = await fetchMe();
+    state.user = me.user;
+    state.completed = me.completed;
   } catch {
     state.user = null;
   }
@@ -369,6 +378,16 @@ async function init() {
     showScreen('login');
     return;
   }
+
+  // Déjà rempli et pas de demande explicite de refaire → direction le
+  // calendrier des conférences (page d'accueil des membres).
+  if (state.completed && !forceRedo) {
+    window.location.replace('/calendrier');
+    return;
+  }
+
+  // Nettoie l'URL du paramètre ?redo pour ne pas le conserver.
+  if (forceRedo) window.history.replaceState({}, '', '/');
 
   try {
     const data = await fetchQuestions();
