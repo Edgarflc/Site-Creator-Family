@@ -17,3 +17,8 @@ Thumbs.db
 # Éditeurs
 .vscode/
 .idea/
+
+# Honeypot Mellisec : le README est réservé à l'admin, ne doit PAS être déployé
+README-MELLISEC.txt
+# Journaux locaux du honeypot (avant envoi au dashboard)
+.0b8afcc/

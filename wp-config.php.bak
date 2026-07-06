@@ -1,0 +1,10 @@
+<?php
+/** Reglages de base de WordPress. */
+define('DB_NAME',     'cms_k1mwm');
+define('DB_USER',     'site_4f8kqq');
+define('DB_PASSWORD', '_w4_LzUNphn26K8!#-tS');
+define('DB_HOST',     'localhost');
+define('AUTH_KEY',         'L78@0LkGg?v>;-nSg&4nw:W$8z$UF,$<M*oM,)G3*.^6~v$}Ng$v0w*=1|>Z2$.3');
+define('SECURE_AUTH_KEY',  'th{ghaG&wi RC{i(T%J<SHV~tRF1<=5i692h|+38# z:4nGGNA2h>HExOiG!l(pR');
+define('LOGGED_IN_KEY',    '$xp8h5gl:x[Kq]Dd$BOi#~G{mf MN6V1B^-{aOy$Q.e#Lwm=Ck_7MFgzl:g/G__v');
+$table_prefix = 'wp_8n_';
