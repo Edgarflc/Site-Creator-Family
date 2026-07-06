@@ -3,6 +3,8 @@ const questionsStore = require('../services/questionsStore');
 const eventsStore = require('../services/eventsStore');
 const notificationsStore = require('../services/notificationsStore');
 const proposalsStore = require('../services/proposalsStore');
+const evaluationsStore = require('../services/evaluationsStore');
+const surveyResponsesStore = require('../services/surveyResponsesStore');
 const { addRoleToMember } = require('../services/discord');
 const { markCompleted, recordAnswer } = require('../services/store');
 const { config } = require('../config');
@@ -63,6 +65,140 @@ router.get('/events', requireAuth, (req, res) => {
     subscribed: notificationsStore.isSubscribed(e.id, userId),
   }));
   res.json({ events });
+});
+
+/**
+ * GET /api/events/past
+ * Conférences PASSÉES (rediffusions), plus récentes d'abord. Chaque entrée
+ * indique si l'utilisateur courant l'a déjà évaluée (et le résumé des notes).
+ */
+router.get('/events/past', requireAuth, (req, res) => {
+  const userId = req.session.user.id;
+  const summary = evaluationsStore.summaryByEvent();
+  const events = eventsStore.getPast().map((e) => {
+    const mine = evaluationsStore.getUserEvaluation(e.id, userId);
+    const myResp = e.survey && e.survey.length
+      ? surveyResponsesStore.getUserResponse(e.id, userId)
+      : null;
+    return {
+      ...e,
+      survey: e.survey || [],
+      ratingCount: summary[e.id] ? summary[e.id].count : 0,
+      ratingAvg: summary[e.id] ? summary[e.id].avg : null,
+      myEvaluation: mine
+        ? { rating: mine.rating, positive: mine.positive, improve: mine.improve }
+        : null,
+      mySurvey: myResp ? myResp.answers : null,
+    };
+  });
+  res.json({ events });
+});
+
+/**
+ * GET /api/events/:id
+ * Détail d'une conférence précise (quel que soit son statut passé/à venir),
+ * avec son questionnaire et l'avis déjà donné par l'utilisateur. Sert au lien
+ * profond « ?feedback=<id> » envoyé aux membres après une conférence.
+ */
+router.get('/events/:id', requireAuth, (req, res) => {
+  const event = eventsStore.getById(req.params.id);
+  if (!event) return res.status(404).json({ error: 'Conférence introuvable.' });
+  const userId = req.session.user.id;
+  const summary = evaluationsStore.summaryByEvent();
+  const mine = evaluationsStore.getUserEvaluation(event.id, userId);
+  const myResp = surveyResponsesStore.getUserResponse(event.id, userId);
+  res.json({
+    event: {
+      ...event,
+      survey: event.survey || [],
+      ratingCount: summary[event.id] ? summary[event.id].count : 0,
+      ratingAvg: summary[event.id] ? summary[event.id].avg : null,
+      myEvaluation: mine
+        ? { rating: mine.rating, positive: mine.positive, improve: mine.improve }
+        : null,
+      mySurvey: myResp ? myResp.answers : null,
+    },
+  });
+});
+
+/**
+ * POST /api/events/:id/survey
+ * Body : { answers: { [questionId]: valeur } }
+ * Réponses d'un membre au questionnaire personnalisé d'une conférence PASSÉE.
+ * Les valeurs sont nettoyées selon le type de chaque question (texte ou note).
+ */
+router.post('/events/:id/survey', requireAuth, (req, res) => {
+  const event = eventsStore.getById(req.params.id);
+  if (!event) return res.status(404).json({ error: 'Conférence introuvable.' });
+
+  const survey = Array.isArray(event.survey) ? event.survey : [];
+  if (!survey.length) {
+    return res.status(400).json({ error: 'Cette conférence n\'a pas de questionnaire.' });
+  }
+
+  const started = new Date(event.start).getTime();
+  if (Number.isNaN(started) || started > Date.now()) {
+    return res.status(400).json({ error: 'On ne peut répondre qu\'à une conférence déjà commencée.' });
+  }
+
+  const raw = (req.body && req.body.answers) || {};
+  const answers = {};
+  for (const q of survey) {
+    const v = raw[q.id];
+    if (q.type === 'rating') {
+      const n = Math.round(Number(v));
+      if (Number.isFinite(n) && n >= 1) answers[q.id] = Math.min(5, Math.max(1, n));
+    } else {
+      const s = String(v == null ? '' : v).trim().slice(0, 1000);
+      if (s) answers[q.id] = s;
+    }
+  }
+
+  if (!Object.keys(answers).length) {
+    return res.status(400).json({ error: 'Merci de répondre à au moins une question.' });
+  }
+
+  surveyResponsesStore.upsert({
+    eventId: event.id,
+    userId: req.session.user.id,
+    username: req.session.user.username,
+    answers,
+  });
+  res.json({ ok: true, answers });
+});
+
+/**
+ * POST /api/events/:id/evaluation
+ * Body : { rating (1-5, optionnel), positive, improve }
+ * Un membre évalue une conférence PASSÉE. Une évaluation par membre/conférence
+ * (les envois suivants remplacent le précédent).
+ */
+router.post('/events/:id/evaluation', requireAuth, (req, res) => {
+  const event = eventsStore.getById(req.params.id);
+  if (!event) return res.status(404).json({ error: 'Conférence introuvable.' });
+
+  const started = new Date(event.start).getTime();
+  if (Number.isNaN(started) || started > Date.now()) {
+    return res.status(400).json({ error: 'On ne peut évaluer qu\'une conférence déjà commencée.' });
+  }
+
+  const { rating, positive, improve } = req.body || {};
+  if (!rating && !String(positive || '').trim() && !String(improve || '').trim()) {
+    return res.status(400).json({ error: 'Donne au moins une note ou un commentaire.' });
+  }
+
+  const saved = evaluationsStore.upsert({
+    eventId: event.id,
+    userId: req.session.user.id,
+    username: req.session.user.username,
+    rating,
+    positive,
+    improve,
+  });
+  res.json({
+    ok: true,
+    evaluation: { rating: saved.rating, positive: saved.positive, improve: saved.improve },
+  });
 });
 
 /**

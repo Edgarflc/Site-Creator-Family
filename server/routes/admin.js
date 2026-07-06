@@ -9,6 +9,8 @@ const eventsStore = require('../services/eventsStore');
 const questionsStore = require('../services/questionsStore');
 const notificationsStore = require('../services/notificationsStore');
 const proposalsStore = require('../services/proposalsStore');
+const evaluationsStore = require('../services/evaluationsStore');
+const surveyResponsesStore = require('../services/surveyResponsesStore');
 const { getStats } = require('../services/store');
 
 const router = express.Router();
@@ -29,8 +31,32 @@ router.use(requireAdmin);
 /* ----------------------------- Conférences ----------------------------- */
 
 // Toutes les conférences (y compris passées), pour la gestion.
+// Chaque conférence est enrichie du résumé de ses évaluations (note moyenne + nb).
 router.get('/events', (req, res) => {
-  res.json({ events: eventsStore.getAll() });
+  const summary = evaluationsStore.summaryByEvent();
+  const surveyCounts = surveyResponsesStore.countByEvent();
+  const events = eventsStore.getAll().map((e) => ({
+    ...e,
+    ratingCount: summary[e.id] ? summary[e.id].count : 0,
+    ratingAvg: summary[e.id] ? summary[e.id].avg : null,
+    surveyQuestionCount: Array.isArray(e.survey) ? e.survey.length : 0,
+    surveyResponseCount: surveyCounts[e.id] || 0,
+  }));
+  res.json({ events });
+});
+
+// Détail des évaluations d'une conférence (pour le panneau admin).
+router.get('/events/:id/evaluations', (req, res) => {
+  res.json({ evaluations: evaluationsStore.getByEvent(req.params.id) });
+});
+
+// Détail des réponses au questionnaire personnalisé d'une conférence.
+router.get('/events/:id/survey-responses', (req, res) => {
+  const event = eventsStore.getById(req.params.id);
+  res.json({
+    questions: event && Array.isArray(event.survey) ? event.survey : [],
+    responses: surveyResponsesStore.getByEvent(req.params.id),
+  });
 });
 
 router.post('/events', (req, res) => {
@@ -55,6 +81,8 @@ router.delete('/events/:id', (req, res) => {
   const ok = eventsStore.remove(req.params.id);
   if (!ok) return res.status(404).json({ error: 'Conférence introuvable.' });
   notificationsStore.removeEvent(req.params.id); // retire les abonnements liés
+  evaluationsStore.removeEvent(req.params.id); // retire les évaluations liées
+  surveyResponsesStore.removeEvent(req.params.id); // retire les réponses au questionnaire
   res.json({ ok: true });
 });
 

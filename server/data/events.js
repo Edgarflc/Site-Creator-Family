@@ -2,7 +2,7 @@
  * Configuration des conférences / événements à venir de la Creator Family.
  *
  * Ce fichier s'édite à la main, comme `questions.js`. Chaque entrée décrit une
- * conférence affichée dans le calendrier (page `/calendrier`, réservée aux
+ * conférence affichée dans le calendrier (page `/conferences`, réservée aux
  * utilisateurs connectés via Discord).
  *
  * Champs d'une conférence :
@@ -13,8 +13,11 @@
  *                          l'affichage est formaté en français côté navigateur.
  *   host        (string)  intervenant / hôte de la conférence
  *   description (string)  court texte décrivant la conférence
+ *   replayUrl   (string)  lien de rediffusion (optionnel ; affiché dans l'onglet
+ *                          « Rediffusions » une fois la conférence passée)
  *
- * Les conférences PASSÉES sont automatiquement masquées (voir routes/api.js).
+ * Les conférences PASSÉES sont retirées du calendrier « à venir » (voir
+ * routes/api.js) et basculent dans l'onglet « Rediffusions ».
  * L'ordre du tableau n'a pas d'importance : le tri se fait par date à la volée.
  */
 

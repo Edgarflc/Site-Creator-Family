@@ -1,1 +1,56 @@
-[]
+[
+  {
+    "id": "conf-premiere-pro",
+    "title": "Les bases de Premiere Pro",
+    "start": "2026-07-06T15:00:00",
+    "host": "Spyns",
+    "description": "",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-bases-redaction",
+    "title": "Les bases de la Rédaction",
+    "start": "2026-07-07T18:00:00",
+    "host": "Lucas vr",
+    "description": "",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-trouver-clients",
+    "title": "Trouver des clients",
+    "start": "2026-07-09T16:00:00",
+    "host": "Valentin",
+    "description": "",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-methode-montage",
+    "title": "Mieux monter grâce à la Méthode PP, SP, MP",
+    "start": "2026-07-13T19:00:00",
+    "host": "Valentin",
+    "description": "",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-sujets-shorts",
+    "title": "Trouver de bons sujets de Shorts",
+    "start": "2026-07-14T18:00:00",
+    "host": "Lucas vr",
+    "description": "",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-intro-montage",
+    "title": "Comment (bien) monter une intro",
+    "start": "2026-07-16T15:00:00",
+    "host": "Spyns",
+    "description": "",
+    "replayUrl": "",
+    "survey": []
+  }
+]

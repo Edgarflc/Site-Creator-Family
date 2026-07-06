@@ -382,7 +382,7 @@ async function init() {
   // Déjà rempli et pas de demande explicite de refaire → direction le
   // calendrier des conférences (page d'accueil des membres).
   if (state.completed && !forceRedo) {
-    window.location.replace('/calendrier');
+    window.location.replace('/conferences');
     return;
   }
 

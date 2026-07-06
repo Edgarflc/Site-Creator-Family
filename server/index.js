@@ -39,15 +39,21 @@ app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Page calendrier des conférences (réservée aux connectés).
+// Page des conférences (calendrier + rediffusions), réservée aux connectés.
 // Si aucune session Discord n'est active, on redirige vers l'OAuth et on
 // mémorise la destination pour y revenir après connexion.
-app.get('/calendrier', (req, res) => {
+app.get('/conferences', (req, res) => {
   if (!req.session.user && !config.devBypass) {
-    req.session.returnTo = '/calendrier';
+    req.session.returnTo = req.originalUrl; // conserve un éventuel ?feedback=...
     return res.redirect('/auth/login');
   }
-  res.sendFile(path.join(__dirname, '..', 'public', 'calendrier.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'conferences.html'));
+});
+
+// Ancienne URL `/calendrier` : redirection permanente vers `/conferences`
+// (en conservant la query, ex : les liens d'avis ?feedback=...).
+app.get('/calendrier', (req, res) => {
+  res.redirect(301, req.originalUrl.replace('/calendrier', '/conferences'));
 });
 
 // Espace d'administration (réservé aux admins). Redirige vers la connexion si

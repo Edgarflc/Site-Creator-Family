@@ -33,15 +33,20 @@
   /* ----------------------- Menu déroulant custom ----------------------- */
   function fillTimeOptions(select) {
     const frag = document.createDocumentFragment();
-    for (let h = 0; h < 24; h++) {
+    const addOption = (v) => {
+      const o = document.createElement('option');
+      o.value = v;
+      o.textContent = v;
+      frag.appendChild(o);
+    };
+    // Créneaux de conférence : de 08:00 à 23:55, puis 00:00 (minuit) en fin de
+    // liste. On ne propose pas les heures avant 8h (aucune conférence si tôt).
+    for (let h = 8; h < 24; h++) {
       for (let m = 0; m < 60; m += 5) {
-        const v = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
-        const o = document.createElement('option');
-        o.value = v;
-        o.textContent = v;
-        frag.appendChild(o);
+        addOption(String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0'));
       }
     }
+    addOption('00:00'); // minuit (fin de soirée)
     select.appendChild(frag);
   }
 

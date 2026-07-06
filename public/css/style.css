@@ -800,7 +800,7 @@ body {
   font-size: 20px;
   font-weight: 700;
 }
-.cal-nav {
+.cal-nav-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -813,11 +813,11 @@ body {
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
-.cal-nav:hover {
+.cal-nav-btn:hover {
   border-color: var(--accent);
   background: rgba(124, 92, 255, 0.12);
 }
-.cal-nav:active {
+.cal-nav-btn:active {
   transform: scale(0.94);
 }
 
@@ -2207,4 +2207,781 @@ body {
     padding: 9px 12px;
     font-size: 13px;
   }
+}
+
+/* ======================================================================
+   ESPACE CALENDRIER — mise en page avec barre latérale (sidebar)
+   ====================================================================== */
+/* Pleine largeur : l'espace calendrier occupe tout le viewport (vrai dashboard),
+   plutôt qu'une carte centrée qui laissait de grandes marges vides. */
+.app-cal {
+  padding: 0;
+  /* Colonne unique en pleine largeur : le calendrier peut s'étirer (justify-self:
+     stretch) tandis que l'écran de connexion reste centré (justify-self: center). */
+  grid-template-columns: minmax(0, 1fr);
+}
+/* L'écran de connexion reste une carte centrée avec de la marge. */
+.app-cal #screen-login {
+  padding: 24px;
+  justify-self: center;
+}
+.screen-cal {
+  max-width: none;
+  width: 100%;
+  align-self: stretch;
+  justify-self: stretch;
+}
+.screen-cal[hidden] {
+  display: none;
+}
+
+.cal-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* --- Barre latérale : collée à gauche, sur toute la hauteur --- */
+.cal-sidebar {
+  flex-shrink: 0;
+  width: 264px;
+  align-self: flex-start;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  border-right: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.025);
+}
+.cal-sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  padding: 22px 16px;
+  overflow-y: auto;
+}
+.cal-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px 16px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+.cal-brand-mark {
+  color: var(--accent);
+  font-size: 18px;
+}
+
+.cal-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+/* Les règles `display:flex/inline-flex` ci-dessous écraseraient l'attribut
+   `hidden` : on rétablit son comportement pour ces éléments masquables. */
+.cal-nav-item[hidden],
+.cal-nav-count[hidden],
+.cal-user[hidden] {
+  display: none;
+}
+.cal-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.cal-nav-item .material-symbols-rounded {
+  font-size: 21px;
+}
+.cal-nav-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+.cal-nav-item.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.9), rgba(196, 77, 255, 0.9));
+  border-color: transparent;
+  box-shadow: 0 8px 20px var(--accent-glow);
+}
+.cal-nav-label {
+  flex: 1;
+  min-width: 0;
+}
+.cal-nav-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(124, 92, 255, 0.18);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cal-nav-item.active .cal-nav-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.cal-sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--card-border);
+}
+/* Les boutons Proposer/Ajouter occupent toute la largeur dans la sidebar. */
+.cal-sidebar-actions .cal-propose-btn,
+.cal-sidebar-actions .cal-add-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.cal-sidebar-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 12px;
+}
+.cal-nav-admin {
+  color: var(--accent);
+}
+.cal-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.cal-user:hover {
+  border-color: var(--accent);
+  background: rgba(124, 92, 255, 0.1);
+}
+.cal-user .profile-avatar {
+  position: static;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+}
+.cal-user-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-user .material-symbols-rounded {
+  font-size: 20px;
+  color: var(--text-dim);
+}
+
+/* --- Colonne principale : remplit tout l'espace restant --- */
+.cal-main {
+  flex: 1;
+  min-width: 0;
+  padding: 30px clamp(20px, 3vw, 48px) 56px;
+}
+.cal-view {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  animation: rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* Sans cette règle, `display:flex` ci-dessus écraserait l'attribut `hidden`
+   et les deux vues resteraient affichées en même temps. */
+.cal-view[hidden] {
+  display: none;
+}
+
+/* Deux colonnes : calendrier à gauche, conférences à venir à droite. */
+.cal-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  gap: 24px;
+  align-items: start;
+}
+.cal-columns .events-section {
+  position: sticky;
+  top: 30px;
+}
+/* Le titre de la colonne de droite est toujours affiché (même vide au départ). */
+.cal-columns .events-title {
+  margin-bottom: 14px;
+}
+
+/* Bouton d'ajout rapide (petit +) dans l'en-tête du calendrier. */
+.cal-quick-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: none;
+  box-shadow: 0 8px 22px var(--accent-glow);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.cal-quick-add:hover {
+  transform: translateY(-1px) rotate(90deg);
+}
+.cal-quick-add[hidden] {
+  display: none;
+}
+.cal-quick-add .material-symbols-rounded {
+  font-size: 24px;
+}
+
+/* Colonne de droite : état vide compact (jamais de trou visuel). */
+.side-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--text-dim);
+  background: var(--card);
+  border: 1px dashed var(--card-border);
+  border-radius: 16px;
+}
+.side-empty .material-symbols-rounded {
+  font-size: 34px;
+  color: var(--accent);
+  opacity: 0.7;
+}
+.side-empty p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.events-title .material-symbols-rounded {
+  font-size: 20px;
+  color: var(--accent);
+}
+
+@media (max-width: 1024px) {
+  .cal-columns {
+    grid-template-columns: 1fr;
+  }
+  .cal-columns .events-section {
+    position: static;
+  }
+}
+
+/* Barre supérieure mobile (menu burger) — masquée sur desktop. */
+.cal-mobilebar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.cal-burger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  cursor: pointer;
+}
+.cal-burger:hover {
+  border-color: var(--accent);
+}
+
+/* Voile de fond pour le drawer mobile. */
+.cal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.cal-scrim.show {
+  opacity: 1;
+}
+.cal-scrim[hidden] {
+  display: none;
+}
+
+/* ======================= Rediffusions ======================= */
+.replay-card .daybox-past {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--card-border);
+}
+.replay-card .daybox-past .daybox-day {
+  color: var(--text-dim);
+}
+.event-time.past {
+  color: var(--text-dim);
+}
+.rating-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.stars-view {
+  display: inline-flex;
+  gap: 1px;
+}
+.stars-view .material-symbols-rounded {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.22);
+}
+.stars-view .material-symbols-rounded.filled {
+  color: #ffc857;
+  font-variation-settings: 'FILL' 1;
+}
+.rating-count {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.replay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 6px 18px var(--accent-glow);
+  transition: transform 0.15s ease;
+}
+.replay-btn:hover {
+  transform: translateY(-1px);
+}
+.replay-btn .material-symbols-rounded {
+  font-size: 18px;
+}
+.replay-none {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.replay-none .material-symbols-rounded {
+  font-size: 18px;
+}
+.eval-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(124, 92, 255, 0.12);
+  border: 1px solid rgba(124, 92, 255, 0.32);
+  border-radius: 999px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+.eval-btn:hover {
+  background: rgba(124, 92, 255, 0.2);
+  transform: translateY(-1px);
+}
+.eval-btn .material-symbols-rounded {
+  font-size: 18px;
+}
+.eval-btn.done {
+  color: #7ee787;
+  background: rgba(126, 231, 135, 0.12);
+  border-color: rgba(126, 231, 135, 0.32);
+}
+.survey-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5cc8ff;
+  background: rgba(92, 200, 255, 0.12);
+  border: 1px solid rgba(92, 200, 255, 0.32);
+  border-radius: 999px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+.survey-btn:hover {
+  background: rgba(92, 200, 255, 0.2);
+  transform: translateY(-1px);
+}
+.survey-btn .material-symbols-rounded {
+  font-size: 18px;
+}
+.survey-btn.done {
+  color: #7ee787;
+  background: rgba(126, 231, 135, 0.12);
+  border-color: rgba(126, 231, 135, 0.32);
+}
+.survey-q {
+  padding-bottom: 4px;
+}
+.survey-q .star-input .star .material-symbols-rounded {
+  font-size: 26px;
+}
+
+/* Boutons admin (modifier/supprimer) inline sur les cartes. */
+.event-admin {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.event-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.event-admin .icon-btn {
+  width: 34px;
+  height: 34px;
+}
+
+.replays-loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-dim);
+  background: var(--card);
+  border: 1px dashed var(--card-border);
+  border-radius: 16px;
+}
+.empty-state .material-symbols-rounded {
+  font-size: 42px;
+  color: var(--accent);
+  opacity: 0.7;
+}
+.empty-state p {
+  max-width: 420px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* ======================= Évaluation (étoiles) ======================= */
+.field-hint {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+.star-input {
+  display: inline-flex;
+  gap: 4px;
+}
+.star {
+  display: inline-flex;
+  padding: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.22);
+  transition: transform 0.12s ease, color 0.12s ease;
+}
+.star:hover {
+  transform: scale(1.12);
+}
+.star .material-symbols-rounded {
+  font-size: 32px;
+}
+.star.on {
+  color: #ffc857;
+}
+.star.on .material-symbols-rounded {
+  font-variation-settings: 'FILL' 1;
+}
+
+/* ======================= Responsive (drawer mobile) ======================= */
+@media (max-width: 860px) {
+  .app-cal {
+    padding: 0;
+  }
+  .screen-cal {
+    max-width: none;
+  }
+  .cal-layout {
+    display: block;
+    min-height: 100vh;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .cal-mobilebar {
+    display: flex;
+  }
+  .cal-main {
+    padding: 18px 16px 40px;
+  }
+  .cal-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 280px;
+    max-width: 84vw;
+    z-index: 70;
+    border-radius: 0;
+    border-right: 1px solid var(--card-border);
+    background: var(--bg-soft, #14141f);
+    transform: translateX(-100%);
+    transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cal-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* ======================================================================
+   ADMIN — évaluations des conférences
+   ====================================================================== */
+.rating-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffc857;
+  background: rgba(255, 200, 87, 0.12);
+  border: 1px solid rgba(255, 200, 87, 0.28);
+  border-radius: 999px;
+  padding: 1px 9px;
+}
+.rating-pill .material-symbols-rounded {
+  font-size: 15px;
+  font-variation-settings: 'FILL' 1;
+}
+.rating-pill-count {
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.pill-replay {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(124, 92, 255, 0.32);
+  background: rgba(124, 92, 255, 0.12);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.evals-summary {
+  margin-bottom: 16px;
+}
+.evals-summary-avg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.evals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.eval-item {
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 13px 15px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.eval-item-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.eval-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.eval-user .material-symbols-rounded {
+  font-size: 16px;
+  color: var(--text-dim);
+}
+.eval-date {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.eval-norating {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  font-style: italic;
+}
+.eval-line {
+  display: flex;
+  gap: 8px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text);
+  margin-top: 4px;
+}
+.eval-line .material-symbols-rounded {
+  font-size: 17px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.eval-pos .material-symbols-rounded {
+  color: var(--success);
+}
+.eval-imp .material-symbols-rounded {
+  color: #ffab5e;
+}
+.eval-line p {
+  margin: 0;
+}
+
+/* ---- Constructeur de questionnaire (admin) ---- */
+.pill-survey {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #5cc8ff;
+  border: 1px solid rgba(92, 200, 255, 0.32);
+  background: rgba(92, 200, 255, 0.12);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.survey-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.survey-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.survey-type {
+  flex-shrink: 0;
+  width: 140px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.survey-label {
+  flex: 1;
+  min-width: 0;
+}
+.survey-row .icon-btn {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+/* ---- Réponses au questionnaire (admin) ---- */
+.survey-resp-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 62vh;
+  overflow-y: auto;
+}
+.survey-resp-line {
+  margin-top: 8px;
+}
+.survey-resp-q {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  margin-bottom: 3px;
+}
+.survey-resp-a {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.survey-resp-a p {
+  margin: 0;
+}
+
+/* ---- Lien d'avis (admin) ---- */
+.link-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin-bottom: 10px;
+}
+.link-row input {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.link-row .btn-primary {
+  flex-shrink: 0;
+  white-space: nowrap;
 }

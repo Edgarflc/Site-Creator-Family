@@ -52,7 +52,25 @@ function sanitize(input) {
     start: String(input.start || '').trim(),
     host: String(input.host || '').trim(),
     description: String(input.description || '').trim(),
+    replayUrl: String(input.replayUrl || '').trim(),
   };
+}
+
+/**
+ * Nettoie le questionnaire personnalisé d'une conférence : une liste de
+ * questions { id, type: 'text'|'rating', label }. Les libellés vides sont
+ * retirés ; un id stable est conservé (ou généré) pour mapper les réponses.
+ */
+function sanitizeSurvey(input) {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((q) => ({
+      id: String((q && q.id) || '').trim() || 'q-' + crypto.randomBytes(3).toString('hex'),
+      type: q && q.type === 'rating' ? 'rating' : 'text',
+      label: String((q && q.label) || '').trim().slice(0, 200),
+    }))
+    .filter((q) => q.label)
+    .slice(0, 20);
 }
 
 /** Toutes les conférences (ordre de saisie), pour l'admin. */
@@ -78,10 +96,25 @@ function getUpcoming() {
     .map((e) => ({ ...e }));
 }
 
+/**
+ * Conférences PASSÉES, triées de la plus récente à la plus ancienne.
+ * Alimente l'onglet « Rediffusions » (replays + évaluations).
+ */
+function getPast() {
+  const now = Date.now();
+  return load()
+    .filter((e) => {
+      const t = new Date(e.start).getTime();
+      return !Number.isNaN(t) && t < now - 2 * 60 * 60 * 1000;
+    })
+    .sort((a, b) => new Date(b.start) - new Date(a.start))
+    .map((e) => ({ ...e }));
+}
+
 function create(input) {
   load();
   const data = sanitize(input);
-  const event = { id: genId(), ...data };
+  const event = { id: genId(), ...data, survey: sanitizeSurvey(input.survey) };
   cache.push(event);
   persist();
   return event;
@@ -91,7 +124,12 @@ function update(id, input) {
   load();
   const idx = cache.findIndex((e) => e.id === id);
   if (idx === -1) return null;
-  cache[idx] = { ...cache[idx], ...sanitize(input), id };
+  const merged = { ...cache[idx], ...sanitize(input), id };
+  // Le questionnaire n'est mis à jour que s'il est explicitement fourni : ainsi,
+  // éditer une conférence depuis le calendrier (qui n'envoie pas `survey`) ne
+  // supprime pas le questionnaire créé dans l'espace admin.
+  if (input.survey !== undefined) merged.survey = sanitizeSurvey(input.survey);
+  cache[idx] = merged;
   persist();
   return cache[idx];
 }
@@ -105,4 +143,4 @@ function remove(id) {
   return removed;
 }
 
-module.exports = { getAll, getById, getUpcoming, create, update, remove };
+module.exports = { getAll, getById, getUpcoming, getPast, create, update, remove };

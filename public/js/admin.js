@@ -104,12 +104,23 @@ function renderEvents(events) {
       let when = ev.start;
       const d = new Date(ev.start);
       if (!Number.isNaN(d.getTime())) when = escapeHtml(fmtEventDate.format(d));
+      const hasRatings = ev.ratingCount > 0;
+      const ratingPill = hasRatings
+        ? `<span class="rating-pill" title="Note moyenne">
+             <span class="material-symbols-rounded">star</span>
+             ${ev.ratingAvg != null ? escapeHtml(ev.ratingAvg.toFixed(1)) : '–'}
+             <span class="rating-pill-count">(${ev.ratingCount})</span>
+           </span>`
+        : '';
       return `
         <div class="admin-row ${past ? 'is-past' : ''}" data-id="${escapeHtml(ev.id)}">
           <div class="admin-row-main">
             <div class="admin-row-title">
               ${escapeHtml(ev.title)}
               ${past ? '<span class="pill-past">passée</span>' : ''}
+              ${ratingPill}
+              ${ev.replayUrl ? '<span class="pill-replay">rediffusion</span>' : ''}
+              ${ev.surveyQuestionCount ? '<span class="pill-survey">questionnaire</span>' : ''}
             </div>
             <div class="admin-row-meta">
               <span><span class="material-symbols-rounded">event</span>${when}</span>
@@ -118,6 +129,23 @@ function renderEvents(events) {
             ${ev.description ? `<div class="admin-row-desc">${escapeHtml(ev.description)}</div>` : ''}
           </div>
           <div class="admin-row-actions">
+            <button class="icon-btn" data-act="link" title="Générer le lien d'avis à envoyer aux membres">
+              <span class="material-symbols-rounded">link</span>
+            </button>
+            ${
+              ev.surveyResponseCount
+                ? `<button class="icon-btn" data-act="survey" title="Voir les réponses au questionnaire">
+                     <span class="material-symbols-rounded">quiz</span>
+                   </button>`
+                : ''
+            }
+            ${
+              hasRatings
+                ? `<button class="icon-btn" data-act="evals" title="Voir les évaluations">
+                     <span class="material-symbols-rounded">reviews</span>
+                   </button>`
+                : ''
+            }
             <button class="icon-btn" data-act="edit" title="Modifier">
               <span class="material-symbols-rounded">edit</span>
             </button>
@@ -134,7 +162,166 @@ function renderEvents(events) {
     const ev = events.find((e) => e.id === id);
     row.querySelector('[data-act="edit"]').addEventListener('click', () => openEventModal(ev));
     row.querySelector('[data-act="delete"]').addEventListener('click', () => deleteEvent(ev));
+    const evalsBtn = row.querySelector('[data-act="evals"]');
+    if (evalsBtn) evalsBtn.addEventListener('click', () => openEvalsModal(ev));
+    const surveyBtn = row.querySelector('[data-act="survey"]');
+    if (surveyBtn) surveyBtn.addEventListener('click', () => openSurveyRespModal(ev));
+    row.querySelector('[data-act="link"]').addEventListener('click', () => openLinkModal(ev));
   });
+}
+
+/* --------------------- Lien d'avis (à envoyer aux membres) --------------------- */
+function openLinkModal(ev) {
+  const url = `${window.location.origin}/conferences?feedback=${encodeURIComponent(ev.id)}`;
+  $('#link-sub').textContent = ev.title;
+  $('#link-input').value = url;
+  openModal('#link-modal');
+  const copyBtn = $('#link-copy');
+  copyBtn.innerHTML = '<span class="material-symbols-rounded">content_copy</span> Copier';
+}
+
+async function copyLink() {
+  const input = $('#link-input');
+  const text = input.value;
+  let ok = false;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    }
+  } catch {
+    /* repli ci-dessous */
+  }
+  if (!ok) {
+    try {
+      input.select();
+      ok = document.execCommand('copy');
+    } catch {
+      ok = false;
+    }
+  }
+  if (ok) {
+    $('#link-copy').innerHTML = '<span class="material-symbols-rounded">check</span> Copié !';
+    showToast('Lien copié.', true);
+  } else {
+    showToast('Copie impossible — sélectionne le lien manuellement.');
+  }
+}
+
+/* -------------- Réponses au questionnaire (consultation admin) -------------- */
+function surveyStars(rating) {
+  let out = '';
+  for (let i = 1; i <= 5; i++) {
+    out += `<span class="material-symbols-rounded${i <= rating ? ' filled' : ''}">star</span>`;
+  }
+  return `<span class="stars-view">${out}</span>`;
+}
+
+async function openSurveyRespModal(ev) {
+  $('#survey-resp-title').textContent = `Questionnaire — ${ev.title}`;
+  $('#survey-resp-body').innerHTML = '<p class="admin-empty">Chargement…</p>';
+  openModal('#survey-resp-modal');
+  try {
+    const { questions, responses } = await api('GET', `/api/admin/events/${ev.id}/survey-responses`);
+    renderSurveyResp(questions, responses);
+  } catch (err) {
+    $('#survey-resp-body').innerHTML = `<p class="admin-empty">${escapeHtml(err.message)}</p>`;
+  }
+}
+
+function renderSurveyResp(questions, responses) {
+  if (!responses.length) {
+    $('#survey-resp-body').innerHTML = '<p class="admin-empty">Aucune réponse pour le moment.</p>';
+    return;
+  }
+  const body = $('#survey-resp-body');
+  body.innerHTML = responses
+    .map((r) => {
+      let when = '';
+      const d = new Date(r.updatedAt || r.createdAt);
+      if (!Number.isNaN(d.getTime())) when = escapeHtml(fmtEvalDate.format(d));
+      const lines = questions
+        .map((q) => {
+          const val = r.answers ? r.answers[q.id] : undefined;
+          if (val === undefined || val === '' || val === null) return '';
+          const value =
+            q.type === 'rating' ? surveyStars(Number(val)) : `<p>${escapeHtml(String(val))}</p>`;
+          return `
+            <div class="survey-resp-line">
+              <div class="survey-resp-q">${escapeHtml(q.label)}</div>
+              <div class="survey-resp-a">${value}</div>
+            </div>`;
+        })
+        .join('');
+      return `
+        <div class="eval-item">
+          <div class="eval-item-head">
+            <span class="eval-user"><span class="material-symbols-rounded">person</span>${escapeHtml(r.username)}</span>
+            <span class="eval-date">${when}</span>
+          </div>
+          ${lines || '<p class="admin-empty">Aucune réponse renseignée.</p>'}
+        </div>`;
+    })
+    .join('');
+}
+
+/* -------------------- Évaluations d'une conférence -------------------- */
+const fmtEvalDate = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' });
+
+function starsRow(rating) {
+  if (!rating) return '<span class="eval-norating">Pas de note</span>';
+  let out = '';
+  for (let i = 1; i <= 5; i++) {
+    out += `<span class="material-symbols-rounded${i <= rating ? ' filled' : ''}">star</span>`;
+  }
+  return `<span class="stars-view">${out}</span>`;
+}
+
+async function openEvalsModal(ev) {
+  $('#evals-modal-title').textContent = `Avis — ${ev.title}`;
+  $('#evals-summary').innerHTML = '';
+  $('#evals-list').innerHTML = '<p class="admin-empty">Chargement…</p>';
+  openModal('#evals-modal');
+  try {
+    const { evaluations } = await api('GET', `/api/admin/events/${ev.id}/evaluations`);
+    renderEvals(evaluations, ev);
+  } catch (err) {
+    $('#evals-list').innerHTML = `<p class="admin-empty">${escapeHtml(err.message)}</p>`;
+  }
+}
+
+function renderEvals(evaluations, ev) {
+  const rated = evaluations.filter((e) => typeof e.rating === 'number');
+  const avg = rated.length
+    ? Math.round((rated.reduce((s, e) => s + e.rating, 0) / rated.length) * 10) / 10
+    : null;
+  $('#evals-summary').innerHTML = `
+    <div class="evals-summary-avg">
+      ${starsRow(avg ? Math.round(avg) : 0)}
+      <span>${avg != null ? avg.toFixed(1) + ' / 5' : 'Aucune note'} · ${evaluations.length} avis</span>
+    </div>`;
+
+  if (!evaluations.length) {
+    $('#evals-list').innerHTML = '<p class="admin-empty">Aucune évaluation pour cette conférence.</p>';
+    return;
+  }
+  $('#evals-list').innerHTML = evaluations
+    .map((e) => {
+      let when = '';
+      const d = new Date(e.updatedAt || e.createdAt);
+      if (!Number.isNaN(d.getTime())) when = escapeHtml(fmtEvalDate.format(d));
+      return `
+        <div class="eval-item">
+          <div class="eval-item-head">
+            <span class="eval-user"><span class="material-symbols-rounded">person</span>${escapeHtml(e.username)}</span>
+            ${starsRow(e.rating)}
+            <span class="eval-date">${when}</span>
+          </div>
+          ${e.positive ? `<div class="eval-line eval-pos"><span class="material-symbols-rounded">thumb_up</span><p>${escapeHtml(e.positive)}</p></div>` : ''}
+          ${e.improve ? `<div class="eval-line eval-imp"><span class="material-symbols-rounded">build</span><p>${escapeHtml(e.improve)}</p></div>` : ''}
+        </div>`;
+    })
+    .join('');
 }
 
 function openEventModal(ev) {
@@ -146,7 +333,45 @@ function openEventModal(ev) {
   window.Pickers.setValue($('#event-time'), start.slice(11, 16)); // HH:MM
   $('#event-host').value = ev ? ev.host || '' : '';
   $('#event-desc').value = ev ? ev.description || '' : '';
+  $('#event-replay').value = ev ? ev.replayUrl || '' : '';
+  renderSurveyBuilder(ev && Array.isArray(ev.survey) ? ev.survey : []);
   openModal('#event-modal');
+}
+
+/* -------------------- Constructeur de questionnaire -------------------- */
+function surveyRow(q = {}) {
+  const id = q.id || 'q-' + Math.random().toString(16).slice(2, 8);
+  const node = document.createElement('div');
+  node.className = 'survey-row';
+  node.dataset.id = id;
+  node.innerHTML = `
+    <select class="survey-type">
+      <option value="text"${q.type !== 'rating' ? ' selected' : ''}>Texte libre</option>
+      <option value="rating"${q.type === 'rating' ? ' selected' : ''}>Note (étoiles)</option>
+    </select>
+    <input class="survey-label" type="text" maxlength="200" placeholder="Intitulé de la question"
+           value="${escapeHtml(q.label || '')}" />
+    <button type="button" class="icon-btn danger survey-remove" title="Retirer">
+      <span class="material-symbols-rounded">close</span>
+    </button>`;
+  node.querySelector('.survey-remove').addEventListener('click', () => node.remove());
+  return node;
+}
+
+function renderSurveyBuilder(survey) {
+  const box = $('#survey-builder');
+  box.innerHTML = '';
+  survey.forEach((q) => box.appendChild(surveyRow(q)));
+}
+
+function serializeSurvey() {
+  return $$('#survey-builder .survey-row')
+    .map((row) => ({
+      id: row.dataset.id,
+      type: row.querySelector('.survey-type').value === 'rating' ? 'rating' : 'text',
+      label: row.querySelector('.survey-label').value.trim(),
+    }))
+    .filter((q) => q.label);
 }
 
 async function submitEvent(e) {
@@ -163,6 +388,8 @@ async function submitEvent(e) {
     start,
     host: $('#event-host').value.trim(),
     description: $('#event-desc').value.trim(),
+    replayUrl: $('#event-replay').value.trim(),
+    survey: serializeSurvey(),
   };
   const id = $('#event-id').value;
   try {
@@ -562,6 +789,30 @@ async function init() {
   $('#event-modal').addEventListener('click', (e) => {
     if (e.target === $('#event-modal')) closeModal('#event-modal');
   });
+
+  // Constructeur de questionnaire
+  $('#survey-add').addEventListener('click', () => {
+    $('#survey-builder').appendChild(surveyRow());
+  });
+
+  // Modale des évaluations
+  $('#evals-modal-close').addEventListener('click', () => closeModal('#evals-modal'));
+  $('#evals-modal').addEventListener('click', (e) => {
+    if (e.target === $('#evals-modal')) closeModal('#evals-modal');
+  });
+
+  // Modale des réponses au questionnaire
+  $('#survey-resp-close').addEventListener('click', () => closeModal('#survey-resp-modal'));
+  $('#survey-resp-modal').addEventListener('click', (e) => {
+    if (e.target === $('#survey-resp-modal')) closeModal('#survey-resp-modal');
+  });
+
+  // Modale du lien d'avis
+  $('#link-modal-close').addEventListener('click', () => closeModal('#link-modal'));
+  $('#link-modal').addEventListener('click', (e) => {
+    if (e.target === $('#link-modal')) closeModal('#link-modal');
+  });
+  $('#link-copy').addEventListener('click', copyLink);
 
   // Questionnaire
   $('#question-add').addEventListener('click', () => {

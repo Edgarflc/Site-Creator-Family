@@ -56,7 +56,7 @@ router.get('/callback', async (req, res) => {
         : null,
     };
 
-    // Revient sur la page d'origine (ex : /calendrier) si elle a été mémorisée,
+    // Revient sur la page d'origine (ex : /conferences) si elle a été mémorisée,
     // sinon retour à l'accueil.
     const dest = req.session.returnTo || '/';
     delete req.session.returnTo;

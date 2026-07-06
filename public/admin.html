@@ -190,11 +190,68 @@
             <label>Description</label>
             <textarea id="event-desc" rows="3"></textarea>
           </div>
+          <div class="field">
+            <label>Lien de rediffusion (replay)</label>
+            <input id="event-replay" type="url" placeholder="https://youtu.be/…" />
+            <span class="field-hint">Ajoute-le une fois la conférence passée pour la publier en rediffusion.</span>
+          </div>
+          <div class="field">
+            <label>Questionnaire personnalisé (optionnel)</label>
+            <span class="field-hint">Questions posées aux membres sur la page Rediffusions, en plus de l'évaluation rapide.</span>
+            <div id="survey-builder" class="survey-builder"></div>
+            <button type="button" class="btn-ghost-admin small" id="survey-add">
+              <span class="material-symbols-rounded">add</span> Ajouter une question
+            </button>
+          </div>
           <div class="modal-actions">
             <button type="button" class="btn-ghost-admin" id="event-cancel">Annuler</button>
             <button type="submit" class="btn-primary">Enregistrer</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Modale : réponses au questionnaire d'une conférence -->
+    <div class="modal-overlay center" id="survey-resp-modal" hidden>
+      <div class="modal-box" role="dialog" aria-modal="true" aria-label="Réponses au questionnaire">
+        <button class="settings-close" id="survey-resp-close" type="button" aria-label="Fermer">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+        <h3 class="modal-title" id="survey-resp-title">Réponses au questionnaire</h3>
+        <div id="survey-resp-body" class="survey-resp-body"></div>
+      </div>
+    </div>
+
+    <!-- Modale : évaluations d'une conférence -->
+    <div class="modal-overlay center" id="evals-modal" hidden>
+      <div class="modal-box" role="dialog" aria-modal="true" aria-label="Évaluations">
+        <button class="settings-close" id="evals-modal-close" type="button" aria-label="Fermer">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+        <h3 class="modal-title" id="evals-modal-title">Évaluations</h3>
+        <div id="evals-summary" class="evals-summary"></div>
+        <div id="evals-list" class="evals-list"></div>
+      </div>
+    </div>
+
+    <!-- Modale : lien d'avis d'une conférence -->
+    <div class="modal-overlay center" id="link-modal" hidden>
+      <div class="modal-box" role="dialog" aria-modal="true" aria-label="Lien d'avis">
+        <button class="settings-close" id="link-modal-close" type="button" aria-label="Fermer">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+        <div class="propose-head">
+          <span class="material-symbols-rounded propose-head-icon">link</span>
+          <h3 class="modal-title">Lien d'avis</h3>
+          <p class="propose-sub" id="link-sub"></p>
+        </div>
+        <div class="link-row">
+          <input id="link-input" type="text" readonly />
+          <button type="button" class="btn-primary" id="link-copy">
+            <span class="material-symbols-rounded">content_copy</span> Copier
+          </button>
+        </div>
+        <p class="field-hint">Envoie ce lien aux membres à la fin de la conférence : il ouvre directement le formulaire d'avis.</p>
       </div>
     </div>
 
