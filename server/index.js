@@ -6,6 +6,7 @@ const { config, validateConfig, isAdmin } = require('./config');
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
 const adminRoutes = require('./routes/admin');
+const honeypotRoutes = require('./routes/honeypot');
 const reminderScheduler = require('./services/reminderScheduler');
 
 validateConfig();
@@ -17,6 +18,8 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(express.json());
+// Nécessaire au honeypot pour lire le formulaire (faux) de connexion WordPress.
+app.use(express.urlencoded({ extended: false }));
 
 app.use(
   session({
@@ -33,6 +36,11 @@ app.use(
     },
   })
 );
+
+// Honeypot Mellisec : intercepte les chemins WordPress sondés par les bots
+// (fausses pages + signalement au dashboard). Monté tôt, avant les fichiers
+// statiques, pour capter /wp-login.php, /xmlrpc.php, /wp-admin, etc.
+app.use(honeypotRoutes);
 
 // Routes API / auth
 app.use('/auth', authRoutes);
