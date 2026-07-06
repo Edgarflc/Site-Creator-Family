@@ -1,3 +1,9 @@
+// Les conférences sont saisies en heure locale française (ex. '2026-07-12T18:00:00',
+// sans fuseau). Sur un hébergeur en UTC (Railway), ces dates seraient interprétées
+// à côté (décalage de 1 à 2 h), ce qui déclenchait les rappels à la mauvaise heure.
+// On force donc tout le process sur Europe/Paris (l'heure d'été est gérée par l'OS).
+process.env.TZ = process.env.TZ || 'Europe/Paris';
+
 const path = require('path');
 const express = require('express');
 const session = require('express-session');
