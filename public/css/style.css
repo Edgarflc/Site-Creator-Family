@@ -2494,6 +2494,26 @@ body {
   font-size: 20px;
   color: var(--accent);
 }
+.side-more {
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  padding: 11px 14px;
+  border: 1px dashed var(--card-border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+.side-more:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(124, 92, 255, 0.08);
+}
 
 @media (max-width: 1024px) {
   .cal-columns {

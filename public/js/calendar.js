@@ -472,6 +472,10 @@ function eventCardHtml(ev) {
     </article>`;
 }
 
+// Nombre de conférences affichées dans la colonne « Prochainement » (les autres
+// restent accessibles dans la grille du calendrier).
+const SIDE_LIMIT = 1;
+
 /** Liste des conférences à venir (la première est aussi mise en avant). */
 function renderList() {
   const list = state.events.slice(1);
@@ -480,7 +484,15 @@ function renderList() {
     '<span class="material-symbols-rounded">event_upcoming</span> Prochainement';
 
   if (list.length) {
-    els.eventsList.innerHTML = list.map(eventCardHtml).join('');
+    const shown = list.slice(0, SIDE_LIMIT);
+    const extra = list.length - shown.length;
+    els.eventsList.innerHTML =
+      shown.map(eventCardHtml).join('') +
+      (extra > 0
+        ? `<button class="side-more" type="button">
+             +${extra} autre${extra > 1 ? 's' : ''} — voir le calendrier
+           </button>`
+        : '');
   } else {
     els.eventsList.innerHTML = `
       <div class="side-empty">
@@ -975,6 +987,13 @@ async function submitSurvey(e) {
 function onGlobalClick(e) {
   const notif = e.target.closest('.notify-btn');
   if (notif) return toggleNotify(notif);
+
+  const more = e.target.closest('.side-more');
+  if (more) {
+    const cal = document.querySelector('.calendar');
+    if (cal) cal.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
 
   const evalBtn = e.target.closest('.eval-btn');
   if (evalBtn) {

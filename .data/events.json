@@ -52,5 +52,86 @@
     "description": "",
     "replayUrl": "",
     "survey": []
+  },
+  {
+    "id": "conf-atelier-ecrire-shorts",
+    "title": "Atelier : Écrire un Shorts étape par étape",
+    "start": "2026-07-17T17:00:00",
+    "host": "Toomate",
+    "description": "",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-atelier-monter-shorts",
+    "title": "Atelier : Monter un Shorts de A à Z",
+    "start": "2026-07-20T15:00:00",
+    "host": "Spyns",
+    "description": "",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-analyse-intro-1m",
+    "title": "Analyse d'intro à 1M",
+    "start": "2026-07-21T17:00:00",
+    "host": "Lucas vr",
+    "description": "",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-brolls",
+    "title": "La VRAIE façon d'utiliser des b-rolls",
+    "start": "2026-07-23T16:00:00",
+    "host": "Valentin",
+    "description": "",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-analyse-vos-shorts",
+    "title": "On analyse vos Shorts",
+    "start": "2026-07-24T17:00:00",
+    "host": "Toomate",
+    "description": "",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-bases-after-effects",
+    "title": "Les bases d'After Effects",
+    "start": "2026-07-27T15:00:00",
+    "host": "Maxime",
+    "description": "Montage",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-vitesse-montage",
+    "title": "Comment décupler sa vitesse de montage",
+    "start": "2026-07-30T15:00:00",
+    "host": "Spyns",
+    "description": "Montage",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-comprendre-shorts",
+    "title": "Tout comprendre des Shorts (et comment les écrire)",
+    "start": "2026-07-31T19:00:00",
+    "host": "Toomate",
+    "description": "Rédaction",
+    "replayUrl": "",
+    "survey": []
+  },
+  {
+    "id": "conf-analyse-textes-longues",
+    "title": "On analyse vos Textes (vidéos longues)",
+    "start": "2026-08-01T17:00:00",
+    "host": "Gwen",
+    "description": "Rédaction",
+    "replayUrl": "",
+    "survey": []
   }
 ]
