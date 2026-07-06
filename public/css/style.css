@@ -2494,25 +2494,46 @@ body {
   font-size: 20px;
   color: var(--accent);
 }
-.side-more {
-  display: block;
-  width: 100%;
-  margin-top: 2px;
-  padding: 11px 14px;
-  border: 1px dashed var(--card-border);
-  border-radius: 12px;
-  background: transparent;
-  color: var(--text-dim);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
-}
-.side-more:hover {
-  border-color: var(--accent);
+/* Pastille indiquant le nombre de conférences à venir. */
+.events-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(124, 92, 255, 0.15);
   color: var(--accent);
-  background: rgba(124, 92, 255, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Colonne « Prochainement » défilante : on affiche toutes les conférences,
+   mais au-delà de ~2 cartes la liste défile au lieu d'étirer la page. */
+.cal-columns .events-list.is-scrollable {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  /* Marge + masque de dégradé pour signaler qu'on peut faire défiler. */
+  padding-right: 6px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
+/* Petite barre de défilement discrète, aux couleurs du thème. */
+.cal-columns .events-list.is-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: var(--card-border) transparent;
+}
+.cal-columns .events-list.is-scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+.cal-columns .events-list.is-scrollable::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 999px;
+}
+.cal-columns .events-list.is-scrollable::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
 
 @media (max-width: 1024px) {
@@ -2521,6 +2542,15 @@ body {
   }
   .cal-columns .events-section {
     position: static;
+  }
+  /* Colonne empilée sous le calendrier : la liste reprend le flux de la page
+     (pas de zone de défilement interne, qui gênerait le scroll mobile). */
+  .cal-columns .events-list.is-scrollable {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 }
 
