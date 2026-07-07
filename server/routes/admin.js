@@ -50,6 +50,13 @@ router.get('/events/:id/evaluations', (req, res) => {
   res.json({ evaluations: evaluationsStore.getByEvent(req.params.id) });
 });
 
+// Supprime une évaluation précise (modération : avis abusif ou hors sujet).
+router.delete('/evaluations/:id', (req, res) => {
+  const ok = evaluationsStore.removeById(req.params.id);
+  if (!ok) return res.status(404).json({ error: 'Évaluation introuvable.' });
+  res.json({ ok: true });
+});
+
 // Détail des réponses au questionnaire personnalisé d'une conférence.
 router.get('/events/:id/survey-responses', (req, res) => {
   const event = eventsStore.getById(req.params.id);

@@ -125,6 +125,16 @@ function getAll() {
   return load().map((e) => ({ ...e }));
 }
 
+/** Supprime une évaluation par son id (modération admin). Renvoie true si trouvée. */
+function removeById(id) {
+  load();
+  const before = cache.length;
+  cache = cache.filter((e) => e.id !== id);
+  if (cache.length === before) return false;
+  persist();
+  return true;
+}
+
 /** Supprime toutes les évaluations liées à une conférence (à sa suppression). */
 function removeEvent(eventId) {
   load();
@@ -139,5 +149,6 @@ module.exports = {
   getByEvent,
   summaryByEvent,
   getAll,
+  removeById,
   removeEvent,
 };

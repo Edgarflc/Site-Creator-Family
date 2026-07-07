@@ -316,12 +316,40 @@ function renderEvals(evaluations, ev) {
             <span class="eval-user"><span class="material-symbols-rounded">person</span>${escapeHtml(e.username)}</span>
             ${starsRow(e.rating)}
             <span class="eval-date">${when}</span>
+            <button type="button" class="icon-btn danger eval-delete" data-id="${escapeHtml(e.id)}" title="Supprimer cet avis">
+              <span class="material-symbols-rounded">delete</span>
+            </button>
           </div>
           ${e.positive ? `<div class="eval-line eval-pos"><span class="material-symbols-rounded">thumb_up</span><p>${escapeHtml(e.positive)}</p></div>` : ''}
           ${e.improve ? `<div class="eval-line eval-imp"><span class="material-symbols-rounded">build</span><p>${escapeHtml(e.improve)}</p></div>` : ''}
         </div>`;
     })
     .join('');
+
+  $$('#evals-list .eval-delete').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = evaluations.find((e) => e.id === btn.dataset.id);
+      if (target) deleteEvaluation(target, evaluations, ev);
+    });
+  });
+}
+
+async function deleteEvaluation(evaluation, evaluations, ev) {
+  const ok = await confirmDialog({
+    title: 'Supprimer cet avis',
+    text: `Supprimer définitivement l'avis de « ${evaluation.username} » ? La note moyenne sera recalculée sans lui.`,
+    okLabel: 'Supprimer',
+    danger: true,
+  });
+  if (!ok) return;
+  try {
+    await api('DELETE', `/api/admin/evaluations/${evaluation.id}`);
+    showToast('Avis supprimé.', true);
+    renderEvals(evaluations.filter((e) => e.id !== evaluation.id), ev);
+    loadEvents(); // met à jour la note moyenne affichée sur la carte
+  } catch (err) {
+    showToast(err.message);
+  }
 }
 
 function openEventModal(ev) {
