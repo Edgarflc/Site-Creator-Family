@@ -23,6 +23,35 @@ const app = express();
 // "secure" fonctionnent correctement en HTTPS.
 app.set('trust proxy', 1);
 
+// En-têtes de sécurité (clickjacking, sniffing MIME, fuite de referrer, CSP).
+// Le site ne charge que : ses propres fichiers, les Google Fonts (feuille de
+// style + polices) et les avatars Discord (images). Aucun script/style inline
+// (vérifié), donc un CSP strict ne casse rien.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' https://cdn.discordapp.com data:",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join('; ');
+const isHttps = config.baseUrl.startsWith('https://');
+app.use((req, res, next) => {
+  res.set('Content-Security-Policy', CSP);
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.set('X-Frame-Options', 'DENY');
+  res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // HSTS seulement en prod (HTTPS) : inutile — voire gênant — en local http.
+  if (isHttps) {
+    res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
 app.use(express.json());
 // Nécessaire au honeypot pour lire le formulaire (faux) de connexion WordPress.
 app.use(express.urlencoded({ extended: false }));

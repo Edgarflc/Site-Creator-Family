@@ -3,17 +3,25 @@ const crypto = require('crypto');
 const { config, isAdmin } = require('../config');
 const { exchangeCode, fetchCurrentUser } = require('../services/discord');
 const { hasCompleted } = require('../services/store');
+const { createRateLimiter } = require('../services/rateLimit');
 
 const router = express.Router();
 
 const OAUTH_SCOPE = 'identify';
+
+// Limite les démarrages de connexion OAuth par IP (anti-automatisation/abus).
+const loginLimiter = createRateLimiter({
+  windowMs: 5 * 60 * 1000,
+  max: 20,
+  message: 'Trop de tentatives de connexion. Patiente quelques minutes.',
+});
 
 /**
  * GET /auth/login
  * Redirige l'utilisateur vers la page d'autorisation Discord.
  * Un "state" aléatoire est stocké en session pour se protéger du CSRF.
  */
-router.get('/login', (req, res) => {
+router.get('/login', loginLimiter, (req, res) => {
   const state = crypto.randomBytes(16).toString('hex');
   req.session.oauthState = state;
 

@@ -7,9 +7,18 @@ const evaluationsStore = require('../services/evaluationsStore');
 const surveyResponsesStore = require('../services/surveyResponsesStore');
 const { addRoleToMember } = require('../services/discord');
 const { markCompleted, recordAnswer } = require('../services/store');
+const { createRateLimiter } = require('../services/rateLimit');
 const { config } = require('../config');
 
 const router = express.Router();
+
+// Limiteur pour l'envoi de réponses : borne le farming de rôles par script
+// (un parcours légitime fait ~4 à 6 réponses ; 40/min laisse large).
+const answerLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: 40,
+  message: 'Trop de réponses envoyées coup sur coup. Réessaie dans un instant.',
+});
 
 /**
  * Middleware : refuse l'accès si l'utilisateur n'est pas connecté via Discord.
@@ -22,12 +31,28 @@ function requireAuth(req, res, next) {
 }
 
 /**
+ * Fait progresser l'état du parcours mémorisé en session après une réponse
+ * validée : marque la question comme répondue et débloque ses questions de
+ * suivi (`next`). N'est appelée qu'en cas de succès, pour ne pas bloquer un
+ * réessai légitime après une erreur réseau/Discord.
+ */
+function commitQuizProgress(quiz, questionId, nextIds, questions) {
+  if (!quiz.answered.includes(questionId)) quiz.answered.push(questionId);
+  quiz.frontier = quiz.frontier.filter((id) => id !== questionId);
+  for (const id of nextIds) {
+    if (id && questions[id] && !quiz.answered.includes(id) && !quiz.frontier.includes(id)) {
+      quiz.frontier.push(id);
+    }
+  }
+}
+
+/**
  * GET /api/questions
  * Renvoie le graphe des questions SANS le mapping des rôles
  * (le client n'a pas à connaître quels rôles sont attribués).
  * On expose `next` et `note` pour permettre la navigation et l'affichage.
  */
-router.get('/questions', (req, res) => {
+router.get('/questions', requireAuth, (req, res) => {
   const { startId, finalId, questions } = questionsStore.get();
   const safe = {};
   for (const [id, q] of Object.entries(questions)) {
@@ -244,13 +269,44 @@ router.post('/proposals', requireAuth, (req, res) => {
  * Le serveur détermine le(s) rôle(s) correspondant et les attribue via le bot.
  * Renvoie aussi l'id de la question suivante (`next`).
  */
-router.post('/answer', requireAuth, async (req, res) => {
+router.post('/answer', requireAuth, answerLimiter, async (req, res) => {
   const { questionId, value, values } = req.body || {};
-  const { finalId, completionRoleIds, questions } = questionsStore.get();
+  const { startId, finalId, completionRoleIds, questions } = questionsStore.get();
 
   const question = questions[questionId];
   if (!question) {
     return res.status(400).json({ error: 'Question inconnue.' });
+  }
+
+  // --- Validation du parcours ---------------------------------------------
+  // Sans état serveur, un script pouvait poster n'importe quelle question/valeur
+  // et cumuler des rôles de branches incompatibles (ex. sauter directement à
+  // "createur_abonnes" sans être passé par "arrivee", ou récupérer "Débutant"
+  // ET "Expérimenté" en répondant deux fois). On mémorise donc en session :
+  //   - frontier : questions actuellement atteignables (débloquées par un `next`) ;
+  //   - answered : questions déjà répondues (interdit de répondre deux fois).
+  // Recevoir la question de départ (startId) (ré)initialise le parcours ; la
+  // question finale (finalId) est toujours atteignable (posée en dernier).
+  if (questionId === startId) {
+    req.session.quiz = { frontier: [], answered: [] };
+  }
+  const quiz =
+    req.session.quiz && Array.isArray(req.session.quiz.frontier)
+      ? req.session.quiz
+      : (req.session.quiz = { frontier: [], answered: [] });
+
+  const reachable =
+    questionId === startId ||
+    questionId === finalId ||
+    quiz.frontier.includes(questionId);
+  if (!reachable) {
+    return res.status(409).json({
+      error:
+        "Cette question n'est pas disponible dans ton parcours. Recommence le questionnaire depuis le début.",
+    });
+  }
+  if (quiz.answered.includes(questionId)) {
+    return res.status(409).json({ error: 'Tu as déjà répondu à cette question.' });
   }
 
   let selected;
@@ -294,6 +350,10 @@ router.post('/answer', requireAuth, async (req, res) => {
     }
   }
 
+  // Questions de suivi débloquées par cette réponse (chaque réponse cochée peut
+  // ouvrir un parcours, plus un éventuel `next` au niveau de la question).
+  const nextIds = [...selected.map((a) => a.next || null), question.next || null].filter(Boolean);
+
   // Enregistre la réponse (statistiques admin) et la complétion éventuelle.
   const justCompleted = questionId === finalId;
   recordAnswer(req.session.user.id, questionId, recordedValues);
@@ -302,6 +362,7 @@ router.post('/answer', requireAuth, async (req, res) => {
   // On simule une attribution réussie pour pouvoir tester le parcours.
   if (config.devBypass) {
     console.log('[api/answer] (dev bypass) rôles simulés :', roleIds);
+    commitQuizProgress(quiz, questionId, nextIds, questions);
     if (justCompleted) markCompleted(req.session.user.id);
     return res.json({ ok: true, assignedRoles: roleIds, next });
   }
@@ -314,6 +375,7 @@ router.post('/answer', requireAuth, async (req, res) => {
       // service, donc on peut rester court.
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
+    commitQuizProgress(quiz, questionId, nextIds, questions);
     if (justCompleted) markCompleted(req.session.user.id);
     res.json({ ok: true, assignedRoles: roleIds, next });
   } catch (err) {
