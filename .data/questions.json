@@ -89,7 +89,7 @@
           "value": "experimente",
           "label": "10 000 à 100 000",
           "icon": "trending_up",
-          "note": "Expérimenté",
+          "note": "Intermédiaire",
           "roleIds": [
             "1514279651332063464"
           ],
@@ -99,7 +99,7 @@
           "value": "professionnel",
           "label": "Plus de 100 000",
           "icon": "military_tech",
-          "note": "Professionnel",
+          "note": "Expérimenté",
           "roleIds": [
             "1514279715924344833"
           ],
@@ -128,7 +128,7 @@
           "value": "experimente",
           "label": "10 000 à 100 000",
           "icon": "trending_up",
-          "note": "Expérimenté",
+          "note": "Intermédiaire",
           "roleIds": [
             "1514279651332063464"
           ],
@@ -138,7 +138,7 @@
           "value": "professionnel",
           "label": "Plus de 100 000",
           "icon": "military_tech",
-          "note": "Professionnel",
+          "note": "Expérimenté",
           "roleIds": [
             "1514279715924344833"
           ],
